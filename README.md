@@ -1,7 +1,7 @@
 
 TinyModel is a 44M parameter model trained on TinyStories for mechanistic interpretability.
 
-It has 4 layers, uses ReLU activations, and has no layernorm.
+It has 4 layers, uses ReLU activations, and has no layernorms.
 
 It was trained for 3 epochs on a [preprocessed version](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2) of [TinyStoriesV2](https://huggingface.co/datasets/roneneldan/TinyStories).
 
