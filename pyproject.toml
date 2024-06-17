@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "tiny-model"
+name = "tinystoriesmodel"
 version = "0.1.0"
 description = ""
 authors = ["Noa Nabeshima <noanabeshima@gmail.com>"]
