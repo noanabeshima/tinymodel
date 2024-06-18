@@ -1,5 +1,5 @@
 # TinyModel
-TinyModel is a 4 layer, 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability. It comes with trained SAEs and transcoders.
+TinyModel is a 4 layer, 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability. It uses ReLU activations and no layernorms. It comes with trained SAEs and transcoders. 
 
 It can be installed with `pip install tinystoriesmodel`
 
@@ -24,9 +24,6 @@ lm.generate('Once upon a time, Ada was happily walking through a magical forest 
 # To decode tok_ids you can use
 tokenizer.decode(tok_ids)
 ```
-
-
-It has 4 layers, uses ReLU activations, and has no layernorms.
 
 It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2). I recommend using this dataset for getting SAE/transcoder activations.
 
