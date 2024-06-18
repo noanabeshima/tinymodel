@@ -24,6 +24,16 @@ lm.generate('Once upon a time, Ada was happily walking through a magical forest 
 tokenizer.decode(tok_ids)
 ```
 
+# Sparse MLP/SAE
+Some sparse MLPs/SAEs are provided along with the model.
+
+For example, `acts = lm['M2N100'](tok_ids)`
+
+To get sparse acts, choose which part of the transformer block you want to look at (currently [sparse MLP](https://www.lesswrong.com/posts/MXabwqMwo3rkGqEW8/sparse-mlp-distillation)/[transcoder](https://www.alignmentforum.org/posts/YmkjnWtZGLbHRbzrP/transcoders-enable-fine-grained-interpretable-circuit) and SAE on attention out are available, under the tags 'M' and 'A' respectively.
+
+Then, add the layer. A sparse MLP at layer 2 would be 'M2'.
+Finally, optionally add a particular neuron. For example 'M2N100'.
+
 Tokenization is done as follows:
 - the top-10K most frequent tokens using the GPT-NeoX tokenizer are selected and sorted by frequency.
 - To tokenize a document, first tokenize with the GPT-NeoX tokenizer. Then replace tokens not in the top 10K tokens with a special \[UNK\] token id. All token ids are then mapped to be between 1 and 10K, roughly sorted from most frequent to least.
