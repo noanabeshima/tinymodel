@@ -36,7 +36,7 @@ Some sparse SAEs/transcoders are provided along with the model.
 
 For example, `acts = lm['M2N100'](tok_ids)`
 
-To get sparse acts, choose which part of the transformer block you want to look at (currently [sparse MLP](https://www.lesswrong.com/posts/MXabwqMwo3rkGqEW8/sparse-mlp-distillation)/[transcoder](https://www.alignmentforum.org/posts/YmkjnWtZGLbHRbzrP/transcoders-enable-fine-grained-interpretable-circuit) and SAEs on attention out are available, under the tags `'M'` and `'A'` respectively. Residual stream and MLP out SAEs exist, they just haven't been added yet, bug me on Twitter if you want this to happen fast.
+To get sparse acts, choose which part of the transformer block you want to look at (currently [sparse MLP](https://www.lesswrong.com/posts/MXabwqMwo3rkGqEW8/sparse-mlp-distillation)/[transcoder](https://www.alignmentforum.org/posts/YmkjnWtZGLbHRbzrP/transcoders-enable-fine-grained-interpretable-circuit) and SAEs on attention out are available, under the tags `'M'` and `'A'` respectively. Residual stream and MLP out SAEs exist, they just haven't been added yet, bug me on e.g. Twitter if you want this to happen fast.
 
 Then, add the layer. A sparse MLP at layer 2 would be `'M2'`.
 Finally, optionally add a particular neuron. For example `'A0N10000'`.
