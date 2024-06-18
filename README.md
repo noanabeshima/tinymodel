@@ -34,6 +34,7 @@ To get sparse acts, choose which part of the transformer block you want to look 
 Then, add the layer. A sparse MLP at layer 2 would be 'M2'.
 Finally, optionally add a particular neuron. For example 'A0N10000'.
 
+# Tokenization
 Tokenization is done as follows:
 - the top-10K most frequent tokens using the GPT-NeoX tokenizer are selected and sorted by frequency.
 - To tokenize a document, first tokenize with the GPT-NeoX tokenizer. Then replace tokens not in the top 10K tokens with a special \[UNK\] token id. All token ids are then mapped to be between 1 and 10K, roughly sorted from most frequent to least.
