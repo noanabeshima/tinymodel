@@ -18,7 +18,7 @@ logprobs = lm(tok_ids)
 sae_acts = lm['M1N123'](tok_ids)
 transcoder_acts = lm['M2'](tok_ids)
 
-# or
+# Generation
 lm.generate('Once upon a time, Ada was happily walking through a magical forest with')
 
 # To decode tok_ids you can use
