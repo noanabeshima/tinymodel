@@ -202,6 +202,8 @@ class Tokenizer:
     def decode(self, tok_ids: Union[list, torch.Tensor, int]):
         if isinstance(tok_ids, int):
             tok_ids = [tok_ids]
+        assert isinstance(tok_ids, list) or isinstance(tok_ids, torch.Tensor)
+
         return dec(tok_ids)
 
     def __call__(
