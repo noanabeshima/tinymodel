@@ -131,7 +131,7 @@ class TinyModel(nn.Module):
         """
 
         tag_pat = (
-            "^(?P<mlp_type>M|Rm|Ra|A|Mo)(?P<layer>\d+)((?:\D)(?P<feature_idx>\d+))?$"
+            r"^(?P<mlp_type>M|Rm|Ra|A|Mo)(?P<layer>\d+)((?:\D)(?P<feature_idx>\d+))?$"
         )
         match = re.match(tag_pat, mlp_tag)
 
