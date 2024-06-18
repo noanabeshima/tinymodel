@@ -192,7 +192,7 @@ def get_tok_strs(tok_ids=None, symbolic_spaces=False, symbolic_newlines=False):
 
 class Tokenizer:
     def __init__(self):
-        pass
+        self.vocab_size = 10_000
 
     def encode(self, s: str):
         assert isinstance(s, str)
@@ -202,8 +202,6 @@ class Tokenizer:
     def decode(self, tok_ids: Union[list, torch.Tensor, int]):
         if isinstance(tok_ids, int):
             tok_ids = [tok_ids]
-        assert isinstance(tok_ids, list) or isinstance(tok_ids, torch.Tensor)
-
         return dec(tok_ids)
 
     def __call__(
