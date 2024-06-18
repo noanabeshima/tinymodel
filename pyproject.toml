@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tinystoriesmodel"
-version = "0.1.3"
+version = "0.1.4"
 description = ""
 authors = ["Noa Nabeshima <noanabeshima@gmail.com>"]
 readme = "README.md"
