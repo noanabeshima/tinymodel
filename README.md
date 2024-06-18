@@ -1,5 +1,5 @@
 # TinyModel
-TinyModel is a 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability with trained SAEs and transcoders.
+TinyModel is a 4 layer, 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability with trained SAEs and transcoders.
 
 It can be installed with `pip install tinystoriesmodel`
 
