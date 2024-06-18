@@ -1,5 +1,5 @@
 # TinyModel
-TinyModel is a 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability with trained SAEs and transcoders.
+TinyModel is a 4 layer, 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability. It uses ReLU activations and no layernorms. It comes with trained SAEs and transcoders. 
 
 It can be installed with `pip install tinystoriesmodel`
 
@@ -14,8 +14,9 @@ tok_ids, attn_mask = tokenizer(['Once upon a time', 'In the forest'])
 logprobs = lm(tok_ids)
 
 # Get SAE/transcoder acts
-# See 'Sparse MLP/SAE' section for more information.
+# See 'SAEs/Transcoders' section for more information.
 sae_acts = lm['A1N123'](tok_ids)
+transcoder_acts = lm['M2'](tok_ids)
 
 # or
 lm.generate('Once upon a time, Ada was happily walking through a magical forest with')
@@ -24,14 +25,11 @@ lm.generate('Once upon a time, Ada was happily walking through a magical forest 
 tokenizer.decode(tok_ids)
 ```
 
-
-It has 4 layers, uses ReLU activations, and has no layernorms.
-
-It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2).
+It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2). I recommend using this dataset for getting SAE/transcoder activations.
 
 
 
-# SAE/transcoders
+# SAEs/transcoders
 Some sparse SAEs/transcoders are provided along with the model.
 
 For example, `acts = lm['M2N100'](tok_ids)`
