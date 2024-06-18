@@ -18,8 +18,8 @@ tok_ids, attn_mask = tokenizer(['Once upon a time', 'In the forest'])
 logprobs = lm(tok_ids)
 
 # Get SAE acts
-sae_acts = lm['A1N123'](tok_ids)
 # See 'Sparse MLP/SAE' section for more information.
+sae_acts = lm['A1N123'](tok_ids)
 
 # or
 lm.generate('Once upon a time, Ada was happily walking through a magical forest with')
