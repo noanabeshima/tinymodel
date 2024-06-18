@@ -35,10 +35,10 @@ def clean_text(text):
     text = unidecode(text)
 
     # tabs to spaces
-    text = re.sub("\t", "  ", text)
+    text = re.sub(r"\t", "  ", text)
 
     # remove trailing spaces
-    text = re.sub(r"[\t\f\cK ]+\n", "\n", text)
+    text = re.sub(r"[\s]+\n", "\n", text)
 
     # Replace multiple newlines with single newline
     text = re.sub(r"\n\n+", "\n", text)
