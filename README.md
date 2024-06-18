@@ -1,5 +1,5 @@
 # TinyModel
-TinyModel is a 4 layer, 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability. It uses ReLU activations and no layernorms. It comes with trained SAEs and transcoders. 
+TinyModel is a 4 layer, 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability. It uses ReLU activations and no layernorms. It comes with trained SAEs and transcoders.
 
 It can be installed with `pip install tinystoriesmodel`
 
@@ -15,7 +15,7 @@ logprobs = lm(tok_ids)
 
 # Get SAE/transcoder acts
 # See 'SAEs/Transcoders' section for more information.
-sae_acts = lm['A1N123'](tok_ids)
+sae_acts = lm['M1N123'](tok_ids)
 transcoder_acts = lm['M2'](tok_ids)
 
 # or
@@ -37,7 +37,7 @@ For example, `acts = lm['M2N100'](tok_ids)`
 To get sparse acts, choose which part of the transformer block you want to look at (currently [sparse MLP](https://www.lesswrong.com/posts/MXabwqMwo3rkGqEW8/sparse-mlp-distillation)/[transcoder](https://www.alignmentforum.org/posts/YmkjnWtZGLbHRbzrP/transcoders-enable-fine-grained-interpretable-circuit) and SAEs on attention out are available, under the tags `'M'` and `'A'` respectively). Residual stream and MLP out SAEs exist, they just haven't been added yet, bug me on e.g. Twitter if you want this to happen fast.
 
 Then, add the layer. A sparse MLP at layer 2 would be `'M2'`.
-Finally, optionally add a particular neuron. For example `'A0N10000'`.
+Finally, optionally add a particular neuron. For example `'M0N10000'`.
 
 # Tokenization
 Tokenization is done as follows:
