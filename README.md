@@ -32,7 +32,7 @@ For example, `acts = lm['M2N100'](tok_ids)`
 To get sparse acts, choose which part of the transformer block you want to look at (currently [sparse MLP](https://www.lesswrong.com/posts/MXabwqMwo3rkGqEW8/sparse-mlp-distillation)/[transcoder](https://www.alignmentforum.org/posts/YmkjnWtZGLbHRbzrP/transcoders-enable-fine-grained-interpretable-circuit) and SAE on attention out are available, under the tags 'M' and 'A' respectively.
 
 Then, add the layer. A sparse MLP at layer 2 would be 'M2'.
-Finally, optionally add a particular neuron. For example 'M2N100'.
+Finally, optionally add a particular neuron. For example 'A0N10000'.
 
 Tokenization is done as follows:
 - the top-10K most frequent tokens using the GPT-NeoX tokenizer are selected and sorted by frequency.
