@@ -20,7 +20,6 @@ class SparseMLP(nn.Module):
         preacts = x @ self.encoder.weight.T[:,indices] + self.encoder.bias[indices]
         return self.act(preacts)
 
-
     def __call__(self, x):
         x = self.encoder(x)
         x = self.act(x)
@@ -30,7 +29,7 @@ class SparseMLP(nn.Module):
     @classmethod
     def from_pretrained(self, state_dict_path: str, repo_id="noanabeshima/tiny_model"):
         '''Uses huggingface_hub to download an SAE/sparse MLP.'''
-        state_dict = torch.load(hf_hub_download(repo_id=repo_id, filename=state_dict_path))
+        state_dict = torch.load(hf_hub_download(repo_id=repo_id, filename=state_dict_path+'.pt'))
         n_features, d_model = state_dict['encoder.weight'].shape
         mlp = SparseMLP(d_model=d_model, n_features=n_features)
         mlp.load_state_dict(state_dict)

@@ -9,8 +9,7 @@ from tqdm import tqdm
 
 
 current_file = os.path.abspath(__file__)
-current_dir = '/'.join(current_file.split('/')[:-1])
-
+current_dir = os.path.dirname(current_file)
 neo_tokenizer = AutoTokenizer.from_pretrained(
     "roneneldan/TinyStories",
     padding=True,
@@ -182,7 +181,7 @@ class Tokenizer:
     def encode(self, s: str):
         assert isinstance(s, str)
         
-        return enc(s)[0].tolist()
+        return enc(s, add_begin=False)[0].tolist()
 
     def decode(self, tok_ids: Union[list, torch.Tensor, int]):
         if isinstance(tok_ids, int):
