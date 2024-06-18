@@ -14,7 +14,7 @@ tok_ids, attn_mask = tokenizer(['Once upon a time', 'In the forest'])
 logprobs = lm(tok_ids)
 
 # Get SAE/transcoder acts
-# See 'Sparse MLP/SAE' section for more information.
+# See 'SAEs/Transcoders' section for more information.
 sae_acts = lm['A1N123'](tok_ids)
 
 # or
@@ -31,7 +31,7 @@ It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https:/
 
 
 
-# SAE/transcoders
+# SAEs/transcoders
 Some sparse SAEs/transcoders are provided along with the model.
 
 For example, `acts = lm['M2N100'](tok_ids)`
