@@ -3,10 +3,6 @@ TinyModel is a 44M parameter model trained on [TinyStories V2](https://arxiv.org
 
 It can be installed with `pip install tinystoriesmodel`
 
-It has 4 layers, uses ReLU activations, and has no layernorms.
-
-It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2).
-
 
 ```
 from tiny_model import TinyModel, tokenizer
@@ -27,6 +23,13 @@ lm.generate('Once upon a time, Ada was happily walking through a magical forest 
 # To decode tok_ids you can use
 tokenizer.decode(tok_ids)
 ```
+
+
+It has 4 layers, uses ReLU activations, and has no layernorms.
+
+It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2).
+
+
 
 # Sparse MLP/SAE
 Some sparse MLPs/SAEs are provided along with the model.
