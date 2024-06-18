@@ -1,4 +1,4 @@
-# TinyModel
+# [TinyModel](https://github.com/noanabeshima/tiny_model)
 TinyModel is a 4 layer, 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability. It uses ReLU activations and no layernorms. It comes with trained SAEs and transcoders.
 
 It can be installed with `pip install tinystoriesmodel`
