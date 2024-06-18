@@ -160,7 +160,7 @@ class TinyModel(nn.Module):
         if mlp_tag not in self.sparse_mlps:
             if mlp_tag in DEFAULT_SPARSE_MLPS:
                 self.sparse_mlps.update({
-                    mlp_tag: SparseMLP.from_pretrained(DEFAULT_SPARSE_MLPS[mlp_tag]).to(self.device)
+                    mlp_tag: SparseMLP.from_pretrained(DEFAULT_SPARSE_MLPS[mlp_tag]).to(device=self.device, dtype=self.dtype)
                 })
             else:
                 assert False, dedent(
