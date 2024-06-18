@@ -27,7 +27,7 @@ tokenizer.decode(tok_ids)
 
 It has 4 layers, uses ReLU activations, and has no layernorms.
 
-It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2).
+It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2). I recommend using this dataset for getting SAE/transcoder activations.
 
 
 
