@@ -247,6 +247,5 @@ def get_state_dict(model_fname='tiny_model'):
     There are two models available: `tiny_model` and `tiny_model_1_epoch`.
     '''
     assert model_fname in ['tiny_model', 'tiny_model_1_epoch'], 'There are two models available: `tiny_model` and `tiny_model_1_epoch`.'
-    file_loc = hf_hub_download(repo_id="noanabeshima/tiny_model", filename=f"{model_fname}.pt")
-    state_dict = torch.load(file_loc)
+    state_dict = torch.load(hf_hub_download(repo_id="noanabeshima/tiny_model", filename=f"{model_fname}.pt"))
     return state_dict
