@@ -1,3 +1,3 @@
 from .lm import TinyModel
-from .tokenization.tokenization import enc, dec, tokenizer, tok_see
 from .sparse_mlp import SparseMLP
+from .tokenization.tokenization import dec, enc, tok_see, tokenizer

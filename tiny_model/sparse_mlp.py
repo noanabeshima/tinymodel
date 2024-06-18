@@ -14,10 +14,10 @@ class SparseMLP(nn.Module):
         self.decoder = nn.Linear(n_features, d_model)
 
     def get_acts(self, x, indices=None):
-        '''Indices are either a slice, an int, or a list of ints'''
+        """Indices are either a slice, an int, or a list of ints"""
         if indices is None:
             return self.act(self.encoder(x))
-        preacts = x @ self.encoder.weight.T[:,indices] + self.encoder.bias[indices]
+        preacts = x @ self.encoder.weight.T[:, indices] + self.encoder.bias[indices]
         return self.act(preacts)
 
     def __call__(self, x):
@@ -25,14 +25,14 @@ class SparseMLP(nn.Module):
         x = self.act(x)
         x = self.decoder(x)
         return x
-    
+
     @classmethod
     def from_pretrained(self, state_dict_path: str, repo_id="noanabeshima/tiny_model"):
-        '''Uses huggingface_hub to download an SAE/sparse MLP.'''
-        state_dict = torch.load(hf_hub_download(repo_id=repo_id, filename=state_dict_path+'.pt'))
-        n_features, d_model = state_dict['encoder.weight'].shape
+        """Uses huggingface_hub to download an SAE/sparse MLP."""
+        state_dict = torch.load(
+            hf_hub_download(repo_id=repo_id, filename=state_dict_path + ".pt")
+        )
+        n_features, d_model = state_dict["encoder.weight"].shape
         mlp = SparseMLP(d_model=d_model, n_features=n_features)
         mlp.load_state_dict(state_dict)
         return mlp
-
-    

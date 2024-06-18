@@ -1,8 +1,8 @@
+import einops
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import einops
 
 
 class HookPoint(nn.Module):
@@ -17,7 +17,7 @@ class HookPoint(nn.Module):
         if self.name is not None:
             return f"HookPoint('{self.name}')"
         else:
-            return 'HookPoint()'
+            return "HookPoint()"
 
 
 class Attention(nn.Module):
@@ -47,47 +47,59 @@ class Attention(nn.Module):
 
     @property
     def Wq(self):
-        return einops.rearrange(self.Q.weight.detach(), "d (h k) -> h d k", h=self.n_heads)
+        return einops.rearrange(
+            self.Q.weight.detach(), "d (h k) -> h d k", h=self.n_heads
+        )
+
     @property
     def Wk(self):
-        return einops.rearrange(self.K.weight.detach(), "d (h k) -> h d k", h=self.n_heads)
+        return einops.rearrange(
+            self.K.weight.detach(), "d (h k) -> h d k", h=self.n_heads
+        )
+
     @property
     def Wv(self):
-        return einops.rearrange(self.V.weight.detach(), "d (h k) -> h d k", h=self.n_heads)
+        return einops.rearrange(
+            self.V.weight.detach(), "d (h k) -> h d k", h=self.n_heads
+        )
 
     @property
     def Wo(self):
         return self.O.weight.detach()
 
     def forward(self, x):
-        x = self.attn_inp(x) #hookpoint
+        x = self.attn_inp(x)  # hookpoint
 
         q, k, v = self.Q(x), self.K(x), self.V(x)
 
         qs = einops.rearrange(q, "b s (h d) -> b h s d", h=self.n_heads)
-        qs = self.qs(qs) # hookpoint
+        qs = self.qs(qs)  # hookpoint
 
         ks = einops.rearrange(k, "b s (h d) -> b h s d", h=self.n_heads)
-        ks = self.ks(ks) # hookpoint
+        ks = self.ks(ks)  # hookpoint
 
         vs = einops.rearrange(v, "b s (h d) -> b h s d", h=self.n_heads)
-        vs = self.vs(vs) # hookpoint
+        vs = self.vs(vs)  # hookpoint
 
         # force torch to use flash attention 2
         if x.dtype == torch.float16 or x.dtype == torch.bfloat16:
             with torch.backends.cuda.sdp_kernel(
                 enable_flash=True, enable_math=False, enable_mem_efficient=False
             ):
-                head_writeouts = F.scaled_dot_product_attention(qs, ks, vs, is_causal=True)
+                head_writeouts = F.scaled_dot_product_attention(
+                    qs, ks, vs, is_causal=True
+                )
         else:
             head_writeouts = F.scaled_dot_product_attention(qs, ks, vs, is_causal=True)
-        head_writeouts = self.head_writeouts(head_writeouts) #hookpoint
+        head_writeouts = self.head_writeouts(head_writeouts)  # hookpoint
 
         catted_head_writeouts = einops.rearrange(head_writeouts, "b h q d -> b q (h d)")
-        catted_head_writeouts = self.catted_head_writeouts(catted_head_writeouts) #hookpoint
+        catted_head_writeouts = self.catted_head_writeouts(
+            catted_head_writeouts
+        )  # hookpoint
 
         attn_out = self.O(catted_head_writeouts)
-        attn_out = self.attn_out(attn_out) #hookpoint
+        attn_out = self.attn_out(attn_out)  # hookpoint
 
         return attn_out
 
@@ -106,13 +118,13 @@ class MLP(nn.Module):
         self.mlp_out = HookPoint()
 
     def forward(self, x):
-        x = self.mlp_inp(x) #hookpoint
+        x = self.mlp_inp(x)  # hookpoint
 
         preacts = self.read_in(x)
         acts = self.act(preacts)
         mlp_out = self.write_out(acts)
 
-        mlp_out = self.mlp_out(mlp_out) #hookpoint
+        mlp_out = self.mlp_out(mlp_out)  # hookpoint
 
         return mlp_out
 
@@ -138,16 +150,16 @@ class TransformerBlock(nn.Module):
         self.res_final = HookPoint()
 
     def forward(self, x):
-        x = self.res_attn(x) # hookpoint
+        x = self.res_attn(x)  # hookpoint
         assert x is not None
         x = self.attn(x) + x
         assert x is not None
-        x = self.res_mlp(x) # hookpoint
+        x = self.res_mlp(x)  # hookpoint
         assert x is not None
         mlp_x = self.mlp(x)
         assert mlp_x is not None
         x = self.mlp(x) + x
         assert x is not None
-        x = self.res_final(x) # hookpoint
+        x = self.res_final(x)  # hookpoint
         assert x is not None
         return x

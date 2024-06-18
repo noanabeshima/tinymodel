@@ -1,12 +1,12 @@
+import os
+import re
+from typing import List, Union
+
+import numpy as np
+import torch
+from tqdm import tqdm
 from transformers import AutoTokenizer
 from unidecode import unidecode
-import torch
-import os
-import numpy as np
-import re
-from typing import Union, List
-from tqdm import tqdm
-
 
 current_file = os.path.abspath(__file__)
 current_dir = os.path.dirname(current_file)
@@ -35,11 +35,12 @@ def clean_text(text):
     text = unidecode(text)
 
     # Replace multiple newlines with single newline
-    text = re.sub(r'\n\n+', '\n', text)
+    text = re.sub(r"\n\n+", "\n", text)
     # Replace multiple spaces with single space
-    text = re.sub(r' +', ' ', text)
+    text = re.sub(r" +", " ", text)
 
     return text
+
 
 def clean_story(story):
     # Convert from unicode to ascii to make tokenization better; don't split up quotation marks into multiple tokens e.g.
@@ -105,7 +106,10 @@ def enc(stories, padding=True, return_attn_mask=False, max_length=256, add_begin
     # Add a [BEGIN] token to the beginning of every story. The model is trained with this.
     if add_begin is True:
         input_ids = torch.cat(
-            (torch.full((input_ids.shape[0], 1), neo_tokenizer.bos_token_id), input_ids),
+            (
+                torch.full((input_ids.shape[0], 1), neo_tokenizer.bos_token_id),
+                input_ids,
+            ),
             dim=1,
         )
         attn_mask = torch.cat(
@@ -122,7 +126,10 @@ def enc(stories, padding=True, return_attn_mask=False, max_length=256, add_begin
 
 
 def dec(ts_tok_ids):
-    if type(ts_tok_ids) in {torch.Tensor, np.ndarray} and np.prod(ts_tok_ids.shape) == 1:
+    if (
+        type(ts_tok_ids) in {torch.Tensor, np.ndarray}
+        and np.prod(ts_tok_ids.shape) == 1
+    ):
         ts_tok_ids = int(ts_tok_ids.item())
     if isinstance(ts_tok_ids, int):
         ts_tok_ids = [ts_tok_ids]
@@ -138,8 +145,12 @@ def dec(ts_tok_ids):
         return neo_tokenizer.batch_decode(neo_tok_ids)
 
 
-
-def tok_see(tok_ids: Union[str, torch.Tensor, list[int]], printout=True, symbolic_spaces=True, symbolic_newlines=True):
+def tok_see(
+    tok_ids: Union[str, torch.Tensor, list[int]],
+    printout=True,
+    symbolic_spaces=True,
+    symbolic_newlines=True,
+):
     if isinstance(tok_ids, str):
         tok_ids = enc(tok_ids, add_begin=False, max_length=2048)
     if isinstance(tok_ids, np.ndarray):
@@ -152,9 +163,9 @@ def tok_see(tok_ids: Union[str, torch.Tensor, list[int]], printout=True, symboli
     # toks = [dec(tok_id).replace(' ', '⋅').replace('\n', '↵') for tok_id in tok_ids]
     toks = [dec(tok_id) for tok_id in tok_ids]
     if symbolic_newlines:
-        toks = [tok.replace('\n', '↵') for tok in toks]
+        toks = [tok.replace("\n", "↵") for tok in toks]
     if symbolic_spaces:
-        toks = [tok.replace(' ', '⋅') for tok in toks]
+        toks = [tok.replace(" ", "⋅") for tok in toks]
     if printout:
         print(toks)
     return toks
@@ -166,11 +177,16 @@ def get_tok_strs(tok_ids=None, symbolic_spaces=False, symbolic_newlines=False):
     # tok_ids is a tok_id tensor
     res = []
     for doc in tqdm(tok_ids):
-        doc_tok_strs = tok_see(doc, printout=False, symbolic_spaces=symbolic_spaces, symbolic_newlines=symbolic_newlines)
+        doc_tok_strs = tok_see(
+            doc,
+            printout=False,
+            symbolic_spaces=symbolic_spaces,
+            symbolic_newlines=symbolic_newlines,
+        )
         res.append(doc_tok_strs)
 
     res = np.array(res)
-    
+
     return res
 
 
@@ -180,18 +196,31 @@ class Tokenizer:
 
     def encode(self, s: str):
         assert isinstance(s, str)
-        
+
         return enc(s, add_begin=False)[0].tolist()
 
     def decode(self, tok_ids: Union[list, torch.Tensor, int]):
         if isinstance(tok_ids, int):
             tok_ids = [tok_ids]
         assert isinstance(tok_ids, list) or isinstance(tok_ids, torch.Tensor)
-        
+
         return dec(tok_ids)
 
-    def __call__(self, docs: List[str], padding=True, return_attn_mask=True, max_length=256, add_begin=True):
-        return enc(docs, padding=padding, return_attn_mask=return_attn_mask, max_length=max_length, add_begin=add_begin)
+    def __call__(
+        self,
+        docs: List[str],
+        padding=True,
+        return_attn_mask=True,
+        max_length=256,
+        add_begin=True,
+    ):
+        return enc(
+            docs,
+            padding=padding,
+            return_attn_mask=return_attn_mask,
+            max_length=max_length,
+            add_begin=add_begin,
+        )
 
 
 tokenizer = Tokenizer()
