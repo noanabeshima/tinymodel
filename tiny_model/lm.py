@@ -66,7 +66,7 @@ class TinyModel(nn.Module):
             ), "from_pretrained kwarg must be False or a string specifying model"
 
         # Dict from mlp_tag to sparse mlp
-        self.sparse_mlps = {}
+        self.sparse_mlps = nn.ModuleDict()
 
     @property
     def dtype(self):
@@ -159,9 +159,9 @@ class TinyModel(nn.Module):
 
         if mlp_tag not in self.sparse_mlps:
             if mlp_tag in DEFAULT_SPARSE_MLPS:
-                self.sparse_mlps[mlp_tag] = SparseMLP.from_pretrained(
-                    DEFAULT_SPARSE_MLPS[mlp_tag]
-                )
+                self.sparse_mlps.update({
+                    mlp_tag: SparseMLP.from_pretrained(DEFAULT_SPARSE_MLPS[mlp_tag]).to(self.device)
+                })
             else:
                 assert False, dedent(
                     """
