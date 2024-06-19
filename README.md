@@ -25,7 +25,7 @@ lm.generate('Once upon a time, Ada was happily walking through a magical forest 
 tokenizer.decode(tok_ids)
 ```
 
-It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2). I recommend using this dataset for getting SAE/transcoder activations.
+It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2). Pre-tokenized dataset [here](https://huggingface.co/datasets/noanabeshima/TinyModelTokIds). I recommend using this dataset for getting SAE/transcoder activations.
 
 
 
