@@ -15,8 +15,8 @@ logprobs = lm(tok_ids)
 
 # Get SAE/transcoder acts
 # See 'SAEs/Transcoders' section for more information.
-sae_acts = lm['M1N123'](tok_ids)
-transcoder_acts = lm['M2'](tok_ids)
+feature_acts = lm['M1N123'](tok_ids)
+all_feat_acts = lm['M2'](tok_ids)
 
 # Generation
 lm.generate('Once upon a time, Ada was happily walking through a magical forest with')
