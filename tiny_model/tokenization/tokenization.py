@@ -34,35 +34,19 @@ def clean_text(text):
     # Convert from unicode to ascii to make tokenization better; don't split up quotation marks into multiple tokens e.g.
     text = unidecode(text)
 
+    # tabs to spaces
+    text = re.sub(r"\t", "  ", text)
+
+    # remove trailing spaces
+    text = re.sub(r"[\s]+\n", "\n", text)
+
     # Replace multiple newlines with single newline
     text = re.sub(r"\n\n+", "\n", text)
+    
     # Replace multiple spaces with single space
     text = re.sub(r" +", " ", text)
-
+    
     return text
-
-
-def clean_story(story):
-    # Convert from unicode to ascii to make tokenization better; don't split up quotation marks into multiple tokens e.g.
-    story = unidecode(story)
-
-    # lots of spaces at beginning of documents
-    story = story.strip()
-
-    # lots of trailing spaces at the end of lines
-    story_lines = story.split("\n")
-    story_lines = [line.strip() for line in story_lines]
-    story = "\n".join(story_lines)
-
-    # Double newline is rare in train data while single newline is common.
-    while "\n\n" in story:
-        story = story.replace("\n\n", "\n")
-
-    # Double spaces are rare
-    while "  " in story:
-        story = story.replace("  ", " ")
-
-    return story
 
 
 def enc(stories, padding=True, return_attn_mask=False, max_length=256, add_begin=False):
