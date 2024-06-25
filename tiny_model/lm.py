@@ -22,6 +22,53 @@ DEFAULT_SPARSE_MLPS = {
     "A3": "attn_out/A3_S-1_B2_P1",
 }
 
+def parse_mlp_tag(mlp_tag):
+    defaults_tag_pat = re.compile(
+        r"(?P<mlp_type>(M|Rm|Ra|A|Mo)(?P<layer>\d+))\D(?P<feature_idx>\d+)?"
+    )
+    defaults_match = defaults_tag_pat.fullmatch(mlp_tag)
+    file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>Mo|M|A|Rm|Ra)(?P<layer>\d+)_S[-\d]+_B\d+_P\d+)([^\d](?P<feature_idx>\d+))?')
+    full_file_match = file_tag_pat.fullmatch(mlp_tag)
+
+    if defaults_match:
+        match_groups = defaults_match.groupdict()
+        mlp_type, layer, feature_idx = (
+            match_groups["mlp_type"],
+            int(match_groups["layer"]),
+            match_groups["feature_idx"]
+        )
+        
+        
+
+        feature_idx = None if feature_idx is None else int(feature_idx)
+
+        assert mlp_type in DEFAULT_SPARSE_MLPS
+        return DEFAULT_SPARSE_MLPS[mlp_type], mlp_type, layer, feature_idx
+    elif full_file_match:
+        # try interpreting the mlp_tag as a filename
+
+        mlp_type_to_file = {
+            # 'Mo': 'mlp_out',
+            # 'A': 'attn_out',
+            'M': 'mlp_map_test',
+            # 'Ra': 'res_pre_attn',
+            # 'Rm': 'res_pre_mlp'
+        }
+
+        match_groups = full_file_match.groupdict()
+
+        full_name, mlp_type, layer, feature_idx = match_groups['full_name'], match_groups['mlp_type'], int(match_groups['layer']), match_groups['feature_idx']
+        file = mlp_type_to_file[mlp_type] + '/' + full_name
+
+        feature_idx = None if feature_idx is None else int(feature_idx)
+
+        return file, mlp_type, layer, feature_idx
+    else:
+        return False
+
+
+
+
 
 class TinyModel(nn.Module):
     def __init__(
@@ -130,76 +177,69 @@ class TinyModel(nn.Module):
         sparse_acts = lm['M2.100'](tok_ids)
         """
 
-        tag_pat = (
-            r"^(?P<mlp_type>M|Rm|Ra|A|Mo)(?P<layer>\d+)((?:\D)(?P<feature_idx>\d+))?$"
-        )
-        match = re.match(tag_pat, mlp_tag)
+        parse_output = parse_mlp_tag(mlp_tag)
+        
 
-        if match:
-            mlp_type, layer, feature_idx = (
-                match.group("mlp_type"),
-                match.group("layer"),
-                match.group("feature_idx"),
-            )
-            mlp_tag = mlp_type + layer
-            layer = int(layer)
-            feature_idx = None if feature_idx is None else int(feature_idx)
-        else:
+        if parse_output is False:
             assert False, dedent(
-                """
-                   That\'s not a valid MLP tag. Here are some examples of MLP tags:
-                   M0, A2, Rm0, Ra1, Mo3
-                   They start with a string in [M, A, Rm, Ra, Mo]
-                   representing mlp map, attn out SAE, residual pre-mlp SAE, residual pre-attn SAE, and MLP out SAE respectively.
-                   and they end with a number representing the layer.
-
-                   You can also specify individual feature_idxs, e.g. lm['A2.100'](tok_ids) to get the activations of neuron 100.
-                   """
+                'Failed to parse mlp.'
             )
+            # assert False, dedent(
+            #     """
+            #     [STUB]
+            #     That\'s not a valid MLP tag. Here are some examples of MLP tags:
+            #     M0, A2, Rm0, Ra1, Mo3
+            #     They start with a string in [M, A, Rm, Ra, Mo]
+            #     representing mlp map, attn out SAE, residual pre-mlp SAE, residual pre-attn SAE, and MLP out SAE respectively.
+            #     and they end with a number representing the layer.
 
-        if mlp_tag not in self.sparse_mlps:
-            if mlp_tag in DEFAULT_SPARSE_MLPS:
-                self.sparse_mlps.update({
-                    mlp_tag: SparseMLP.from_pretrained(DEFAULT_SPARSE_MLPS[mlp_tag]).to(device=self.device, dtype=self.dtype)
-                })
-            else:
-                assert False, dedent(
-                    """
-                    mlp_tag {mlp_tag} not found in tiny_model.sparse_mlps or DEFAULT_SPARSE_MLPS
+            #     You can also specify individual feature_idxs, e.g. lm['A2.100'](tok_ids) to get the activations of neuron 100.
+            #     """
+            # )
+        else:
+            file, mlp_type, layer, feature_idx = parse_output
+            mlp_tag = mlp_type + str(layer)
+            self.sparse_mlps.update({
+                mlp_tag: SparseMLP.from_pretrained(file).to(device=self.device, dtype=self.dtype)
+            })
+            # else:
+            #     assert False, dedent(
+            #         """
+            #         mlp_tag {mlp_tag} not found in tiny_model.sparse_mlps or DEFAULT_SPARSE_MLPS
 
-                    [UNIMPLEMENTED]                 
-                    To add a sparse_mlp, do e.g.
-                    tiny_model.set_saes({
-                       \'M2\': SparseMLP.from_pretrained(\'mlp_map/M0_S-1_B0_P0\')
-                    })
+            #         [STUB]: unimplemented                 
+            #         To add a sparse_mlp, do e.g.
+            #         tiny_model.set_saes({
+            #            \'M2\': SparseMLP.from_pretrained(\'mlp_map/M0_S-1_B0_P0\')
+            #         })
                                      
-                    Available keys (of form {mlp_type}{layer}) are:
-                       M0..3 (for MLPs)
-                       A0..3 (for Attn out)
-                       Rm0..3 (for SAE on the residual before MLP)
-                       Ra0..3 (for SAE on the residual stream before attn)
-                       Mo0..3 (for SAE on MLP out)
+            #         Available keys (of form {mlp_type}{layer}) are:
+            #            M0..3 (for MLPs)
+            #            A0..3 (for Attn out)
+            #            Rm0..3 (for SAE on the residual before MLP)
+            #            Ra0..3 (for SAE on the residual stream before attn)
+            #            Mo0..3 (for SAE on MLP out)
                     
-                    See https://huggingface.co/noanabeshima/tiny_model/tree/main for available sparse MLPs.
-                    """
-                )
+            #         See https://huggingface.co/noanabeshima/tiny_model/tree/main for available sparse MLPs.
+            #         """
+            #     )
 
-        def get_sparse_mlp_acts(tok_ids, indices=feature_idx):
-            x = self.forward(tok_ids, return_idx=layer)
-            if mlp_type == "Ra":
-                return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
-            attn_out = self.torso[layer].attn(x)
-            if mlp_type == "A":
-                return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
-            x = attn_out + x
-            if mlp_type in {"M", "Rm"}:
-                return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
-            else:
-                assert mlp_type == "Mo", "mlp_type must be one of Ra, A, M, Rm, Mo"
-                mlp_out = self.torso[layer].mlp(x)
-                return self.sparse_mlps[mlp_tag].get_acts(mlp_out, indices=indices)
+            def get_sparse_mlp_acts(tok_ids, indices=feature_idx):
+                x = self.forward(tok_ids, return_idx=layer)
+                if mlp_type == "Ra":
+                    return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
+                attn_out = self.torso[layer].attn(x)
+                if mlp_type == "A":
+                    return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
+                x = attn_out + x
+                if mlp_type in {"M", "Rm"}:
+                    return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
+                else:
+                    assert mlp_type == "Mo", "mlp_type must be one of Ra, A, M, Rm, Mo"
+                    mlp_out = self.torso[layer].mlp(x)
+                    return self.sparse_mlps[mlp_tag].get_acts(mlp_out, indices=indices)
 
-        return get_sparse_mlp_acts
+            return get_sparse_mlp_acts
 
 
 def get_state_dict(model_fname="tiny_model"):
