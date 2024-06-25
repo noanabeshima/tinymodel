@@ -30,7 +30,7 @@ DEFAULT_SPARSE_MLPS = {
 
 def parse_mlp_tag(mlp_tag):
     defaults_tag_pat = re.compile(
-        r"(?P<mlp_type>(M|Rm|Ra|A|Mo))(?P<layer>\d+)\D(?P<feature_idx>\d+)?"
+        r"(?P<mlp_type>(M|Rm|Ra|A|Mo))(?P<layer>\d+)(\D(?P<feature_idx>\d+))?"
     )
     defaults_match = defaults_tag_pat.fullmatch(mlp_tag)
     file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>(Mo|M|A|Rm|Ra))(?P<layer>\d+)_S[-\d]+.{0,6}_P\d+)([^\d](?P<feature_idx>\d+))?')
