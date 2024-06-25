@@ -12,9 +12,14 @@ from .sparse_mlp import SparseMLP
 from .tokenization.tokenization import dec, enc
 
 DEFAULT_SPARSE_MLPS = {
-    "M0": "mlp_map_test/M0_S-6_R2_P2",
-    "M1": "mlp_map_test/M1_S-4_R8_P2",
+    # "M0": "mlp_map_test/M0_S-6_R2_P2",
+    # "M1": "mlp_map_test/M1_S-4_R8_P2",
     "M2": "mlp_map_test/M2_S-8_R2_P2",
+
+    "M0": "mlp_map_test/M0_S-2_R1_P0",
+    "M1": "mlp_map_test/M1_S-2_R1_P0",
+    
+
     # "M3": "mlp_map/M3_S-1_B0_P0",
     # "A0": "attn_out/A0_S-2_B0_P1",
     # "A1": "attn_out/A1_S-1_B0_P1",
@@ -22,12 +27,13 @@ DEFAULT_SPARSE_MLPS = {
     # "A3": "attn_out/A3_S-1_B2_P1",
 }
 
+
 def parse_mlp_tag(mlp_tag):
     defaults_tag_pat = re.compile(
-        r"(?P<mlp_type>(M|Rm|Ra|A|Mo)(?P<layer>\d+))\D(?P<feature_idx>\d+)?"
+        r"(?P<mlp_type>(M|Rm|Ra|A|Mo))(?P<layer>\d+)\D(?P<feature_idx>\d+)?"
     )
     defaults_match = defaults_tag_pat.fullmatch(mlp_tag)
-    file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>Mo|M|A|Rm|Ra)(?P<layer>\d+)_S[-\d]+_B\d+_P\d+)([^\d](?P<feature_idx>\d+))?')
+    file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>(Mo|M|A|Rm|Ra))(?P<layer>\d+)_S[-\d]+.{0,6}_P\d+)([^\d](?P<feature_idx>\d+))?')
     full_file_match = file_tag_pat.fullmatch(mlp_tag)
 
     if defaults_match:
@@ -39,11 +45,10 @@ def parse_mlp_tag(mlp_tag):
         )
         
         
-
         feature_idx = None if feature_idx is None else int(feature_idx)
 
         assert mlp_type in DEFAULT_SPARSE_MLPS
-        return DEFAULT_SPARSE_MLPS[mlp_type], mlp_type, layer, feature_idx
+        return DEFAULT_SPARSE_MLPS[mlp_type+str(layer)], mlp_type, layer, feature_idx
     elif full_file_match:
         # try interpreting the mlp_tag as a filename
 
@@ -65,8 +70,8 @@ def parse_mlp_tag(mlp_tag):
         return file, mlp_type, layer, feature_idx
     else:
         return False
-
-
+        
+        
 
 
 
