@@ -47,7 +47,7 @@ def parse_mlp_tag(mlp_tag):
         
         feature_idx = None if feature_idx is None else int(feature_idx)
 
-        assert mlp_type in DEFAULT_SPARSE_MLPS
+        assert mlp_type+str(layer) in DEFAULT_SPARSE_MLPS
         return DEFAULT_SPARSE_MLPS[mlp_type+str(layer)], mlp_type, layer, feature_idx
     elif full_file_match:
         # try interpreting the mlp_tag as a filename
