@@ -4,7 +4,6 @@ from typing import List, Union
 
 import numpy as np
 import torch
-from tqdm import tqdm
 from transformers import AutoTokenizer
 from unidecode import unidecode
 
@@ -131,7 +130,7 @@ def dec(ts_tok_ids):
 
 def tok_see(
     tok_ids: Union[str, torch.Tensor, list[int]],
-    printout=True,
+    printout=False,
     symbolic_spaces=True,
     symbolic_newlines=True,
 ):
@@ -153,25 +152,6 @@ def tok_see(
     if printout:
         print(toks)
     return toks
-
-
-def get_tok_strs(tok_ids=None, symbolic_spaces=False, symbolic_newlines=False):
-    if tok_ids is None:
-        return get_tok_strs(torch.arange(0, 10_000)[None]).flatten()
-    # tok_ids is a tok_id tensor
-    res = []
-    for doc in tqdm(tok_ids):
-        doc_tok_strs = tok_see(
-            doc,
-            printout=False,
-            symbolic_spaces=symbolic_spaces,
-            symbolic_newlines=symbolic_newlines,
-        )
-        res.append(doc_tok_strs)
-
-    res = np.array(res)
-
-    return res
 
 
 class Tokenizer:
@@ -208,3 +188,4 @@ class Tokenizer:
 
 
 tokenizer = Tokenizer()
+toks = np.array([dec(tok_id).replace("\n", "↵").replace(" ", "⋅") for tok_id in range(10_000)])

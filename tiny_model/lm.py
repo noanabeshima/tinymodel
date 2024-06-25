@@ -14,7 +14,7 @@ from .tokenization.tokenization import dec, enc
 DEFAULT_SPARSE_MLPS = {
     # "M0": "mlp_map_test/M0_S-6_R2_P2",
     # "M1": "mlp_map_test/M1_S-4_R8_P2",
-    "M2": "mlp_map_test/M2_S-8_R2_P2",
+    "M2": "mlp_map_test/M2_S-2_R1_P0",
 
     "M0": "mlp_map_test/M0_S-2_R1_P0",
     "M1": "mlp_map_test/M1_S-2_R1_P0",
