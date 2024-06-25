@@ -15,8 +15,8 @@ logprobs = lm(tok_ids)
 
 # Get SAE/transcoder acts
 # See 'SAEs/Transcoders' section for more information.
-sae_acts = lm['M1N123'](tok_ids)
-transcoder_acts = lm['M2'](tok_ids)
+feature_acts = lm['M1N123'](tok_ids)
+all_feat_acts = lm['M2'](tok_ids)
 
 # Generation
 lm.generate('Once upon a time, Ada was happily walking through a magical forest with')
@@ -25,7 +25,7 @@ lm.generate('Once upon a time, Ada was happily walking through a magical forest 
 tokenizer.decode(tok_ids)
 ```
 
-It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2). I recommend using this dataset for getting SAE/transcoder activations.
+It was trained for 3 epochs on a [preprocessed version of TinyStoriesV2](https://huggingface.co/datasets/noanabeshima/TinyStoriesV2). Pre-tokenized dataset [here](https://huggingface.co/datasets/noanabeshima/TinyModelTokIds). I recommend using this dataset for getting SAE/transcoder activations.
 
 
 
