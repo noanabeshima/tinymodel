@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tinystoriesmodel"
-version = "0.1.4-5"
+version = "0.1.4-6"
 description = "A small TinyStories LM with SAEs and transcoders"
 authors = ["Noa Nabeshima <noanabeshima@gmail.com>"]
 readme = "README.md"
