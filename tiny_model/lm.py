@@ -163,24 +163,11 @@ class TinyModel(nn.Module):
                 break
         return dec(toks[:, 1:])[0]
 
-    def set_sparse_mlps(self, sparse_mlp_dict):
-        # make sure to set to the lm device
-        # make sure to.. add usage of this in __getitem__
-        # btw does pytorch module children pass to.. values in dictionaries? investigate
-        pass
-
-    def __getitem__(self, mlp_tag):
-        """
-        To be used like:
-        sparse_acts = lm['A0'](tok_ids, indices=[1,5,100])
-        sparse_acts = lm['M1'](tok_ids, indices=slice(0,100))
-        sparse_acts = lm['M3'](tok_ids, indices=0)
-
-        or for single neurons
-
-        sparse_acts = lm['M2N100'](tok_ids)
-        sparse_acts = lm['M2.100'](tok_ids)
-        """
+    def sparse_mlp(self, mlp_tag=None, mlp=None):
+        '''
+        Returns `get_sparse_mlp_acts`, which takes in tok_ids and returns sparse mlp activations. It optionally allows `indices`.
+        '''
+        assert not mlp_tag is None and mlp is None
 
         parse_output = parse_mlp_tag(mlp_tag)
         
@@ -204,9 +191,14 @@ class TinyModel(nn.Module):
         else:
             file, mlp_type, layer, feature_idx = parse_output
             mlp_tag = mlp_type + str(layer)
-            self.sparse_mlps.update({
-                mlp_tag: SparseMLP.from_pretrained(file).to(device=self.device, dtype=self.dtype)
-            })
+            if mlp is None:
+                self.sparse_mlps.update({
+                    mlp_tag: SparseMLP.from_pretrained(file).to(device=self.device, dtype=self.dtype)
+                })
+            else:
+                self.sparse_mlps.update({
+                    mlp_tag: mlp.to(device=self.device, dtype=self.dtype)
+                })
             # else:
             #     assert False, dedent(
             #         """
@@ -245,6 +237,20 @@ class TinyModel(nn.Module):
                     return self.sparse_mlps[mlp_tag].get_acts(mlp_out, indices=indices)
 
             return get_sparse_mlp_acts
+    
+    def __getitem__(self, mlp_tag):
+        """
+        To be used like:
+        sparse_acts = lm['A0'](tok_ids, indices=[1,5,100])
+        sparse_acts = lm['M1'](tok_ids, indices=slice(0,100))
+        sparse_acts = lm['M3'](tok_ids, indices=0)
+
+        or for single neurons
+
+        sparse_acts = lm['M2N100'](tok_ids)
+        sparse_acts = lm['M2.100'](tok_ids)
+        """
+        return self.sparse_mlp(mlp_tag)
 
 
 def get_state_dict(model_fname="tiny_model"):
