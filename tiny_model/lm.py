@@ -167,7 +167,7 @@ class TinyModel(nn.Module):
         '''
         Returns `get_sparse_mlp_acts`, which takes in tok_ids and returns sparse mlp activations. It optionally allows `indices`.
         '''
-        assert not mlp_tag is None and mlp is None
+        assert not (mlp_tag is None and mlp is None)
 
         parse_output = parse_mlp_tag(mlp_tag)
         
