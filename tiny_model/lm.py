@@ -234,7 +234,7 @@ class TinyModel(nn.Module):
 
             return get_sparse_mlp_acts
     
-    def __getitem__(self, mlp_tag):
+    def __getitem__(self, index):
         """
         To be used like:
         sparse_acts = lm['A0'](tok_ids, indices=[1,5,100])
@@ -246,7 +246,43 @@ class TinyModel(nn.Module):
         sparse_acts = lm['M2N100'](tok_ids)
         sparse_acts = lm['M2.100'](tok_ids)
         """
-        return self.sparse_mlp(mlp_tag)
+        if isinstance(index, int):
+            return self.torso[index]
+        else:
+            mlp_tag = index
+            return self.sparse_mlp(mlp_tag)
+
+    def register_sparse(self, mlp_tag=None, mlp=None, include_error=False, detach_error=False, detach_pred=False):
+        assert not (mlp_tag is None and mlp is None)
+
+        parse_output = parse_mlp_tag(mlp_tag)
+        
+        if parse_output is False:
+            assert False, dedent(
+                'Failed to parse mlp.'
+            )
+        else:
+            file, mlp_type, layer, feature_idx = parse_output
+            assert feature_idx is None
+            mlp_tag = mlp_type + str(layer)
+            if mlp is None:
+                sparse_mlp = SparseMLP.from_pretrained(
+                                                        file,
+                                                        include_error=include_error,
+                                                        detach_error=detach_error,
+                                                        detach_pred=detach_pred
+                                                      ).to(
+                                                        device=self.device,
+                                                        dtype=self.dtype
+                                                      )
+            else:
+                sparse_mlp = mlp.to(device=self.device, dtype=self.dtype)
+
+            transformer_block = self.torso[layer]
+            if mlp_type == "A":
+                transformer_block.attn_sae = sparse_mlp
+            if mlp_type == "M":
+                transformer_block.transcoder = sparse_mlp
 
 
 def get_state_dict(model_fname="tiny_model"):

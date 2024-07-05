@@ -57,7 +57,7 @@ class SparseMLP(nn.Module):
             return pred
 
     @classmethod
-    def from_pretrained(self, state_dict_path: str, repo_id="noanabeshima/tiny_model", **kwargs):
+    def from_pretrained(self, state_dict_path: str, repo_id="noanabeshima/tiny_model", include_error=False, detach_error=False, detach_pred=False, **kwargs):
         """Uses huggingface_hub to download an SAE/sparse MLP."""
         state_dict = torch.load(
             hf_hub_download(repo_id=repo_id, filename=state_dict_path + ".pt")
@@ -69,6 +69,6 @@ class SparseMLP(nn.Module):
         if 'd_model' in kwargs:
             assert kwargs['d_model'] == d_model
         
-        mlp = SparseMLP(d_model=d_model, n_features=n_features, **kwargs)
+        mlp = SparseMLP(d_model=d_model, n_features=n_features, include_error=include_error, detach_error=detach_error, detach_pred=detach_pred)
         mlp.load_state_dict(state_dict)
         return mlp
