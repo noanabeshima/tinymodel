@@ -10,7 +10,7 @@ class HookPoint(nn.Module):
         super().__init__()
         self.name = name
 
-    def forward(self, x):
+    def forward(self, x, *args, **kwargs):
         return x
 
     def __repr__(self):
@@ -129,6 +129,12 @@ class MLP(nn.Module):
         return mlp_out
 
 
+# res_attn is just an autoencoder with identity x baseline
+# res_mlp is just.. an autoencoder with identity x baseline
+# mlp is.. a sparse mlp with identity y baseline
+# attn is a sparse mlp with identity y baseline
+
+
 class TransformerBlock(nn.Module):
     def __init__(self, d_model, n_heads, max_seq_len):
         super().__init__()
@@ -149,17 +155,37 @@ class TransformerBlock(nn.Module):
         self.res_mlp = HookPoint()
         self.res_final = HookPoint()
 
+        self.attn_sae = None
+        self.transcoder = None
+        
+
     def forward(self, x):
         x = self.res_attn(x)  # hookpoint
         assert x is not None
-        x = self.attn(x) + x
+
+        attn_out = self.attn(x)
+        if self.attn_sae is not None:
+            attn_out = self.attn_sae(x=attn_out, target=attn_out)
+
+        x = attn_out + x
         assert x is not None
+
         x = self.res_mlp(x)  # hookpoint
         assert x is not None
-        mlp_x = self.mlp(x)
-        assert mlp_x is not None
-        x = self.mlp(x) + x
+
+        mlp_out = self.mlp(x)
+        assert mlp_out is not None
+
+        if self.transcoder is not None:
+            mlp_out = self.transcoder(x=x, target=mlp_out)
+
+        x = mlp_out + x
         assert x is not None
+
         x = self.res_final(x)  # hookpoint
         assert x is not None
         return x
+    
+    def wipe_sparse(self):
+        self.attn_sae = None
+        self.transcoder = None
