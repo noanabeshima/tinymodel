@@ -151,15 +151,15 @@ class TransformerBlock(nn.Module):
 
     def forward(self, x):
         x = self.res_attn(x)  # hookpoint
-        assert x is not None
-        x = self.attn(x) + x
-        assert x is not None
+        
+        attn_x = self.attn(x)
+        x = attn_x + x
+
         x = self.res_mlp(x)  # hookpoint
-        assert x is not None
+
         mlp_x = self.mlp(x)
-        assert mlp_x is not None
-        x = self.mlp(x) + x
-        assert x is not None
+        x = mlp_x + x
+
         x = self.res_final(x)  # hookpoint
-        assert x is not None
+        
         return x
