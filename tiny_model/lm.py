@@ -227,7 +227,7 @@ class TinyModel(nn.Module):
                     return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
                 attn_out = self.torso[layer].attn(x)
                 if mlp_type == "A":
-                    return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
+                    return self.sparse_mlps[mlp_tag].get_acts(attn_out, indices=indices)
                 x = attn_out + x
                 if mlp_type in {"M", "Rm"}:
                     return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
