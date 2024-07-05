@@ -54,7 +54,7 @@ def parse_mlp_tag(mlp_tag):
 
         mlp_type_to_file = {
             # 'Mo': 'mlp_out',
-            # 'A': 'attn_out',
+            'A': 'attn_test',
             'M': 'mlp_map_test',
             # 'Ra': 'res_pre_attn',
             # 'Rm': 'res_pre_mlp'
