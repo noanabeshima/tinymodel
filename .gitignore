@@ -5,3 +5,6 @@ testing.ipynb
 dist/
 *.gitignore
 mlp_map_test/
+attn_test/
+simulation.py
+test.pt
