@@ -188,6 +188,7 @@ class Tokenizer:
 
 
 tokenizer = Tokenizer()
+
+
 raw_toks = np.array([dec(tok_id) for tok_id in range(10_000)])
-tokre_toks = np.array([tok.replace("\n", r"\n") for tok in raw_toks])
 toks = np.array([tok.replace("\n", "↵").replace(" ", "⋅") for tok in raw_toks])
