@@ -192,13 +192,9 @@ class TinyModel(nn.Module):
             file, mlp_type, layer, feature_idx = parse_output
             mlp_tag = mlp_type + str(layer)
             if mlp is None:
-                self.sparse_mlps.update({
-                    mlp_tag: SparseMLP.from_pretrained(file).to(device=self.device, dtype=self.dtype)
-                })
+                sparse_mlp = SparseMLP.from_pretrained(file).to(device=self.device, dtype=self.dtype)
             else:
-                self.sparse_mlps.update({
-                    mlp_tag: mlp.to(device=self.device, dtype=self.dtype)
-                })
+                sparse_mlp = mlp.to(device=self.device, dtype=self.dtype)
             # else:
             #     assert False, dedent(
             #         """
@@ -224,17 +220,17 @@ class TinyModel(nn.Module):
             def get_sparse_mlp_acts(tok_ids, indices=feature_idx):
                 x = self.forward(tok_ids, return_idx=layer)
                 if mlp_type == "Ra":
-                    return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
+                    return sparse_mlp.get_acts(x, indices=indices)
                 attn_out = self.torso[layer].attn(x)
                 if mlp_type == "A":
-                    return self.sparse_mlps[mlp_tag].get_acts(attn_out, indices=indices)
+                    return sparse_mlp.get_acts(attn_out, indices=indices)
                 x = attn_out + x
                 if mlp_type in {"M", "Rm"}:
-                    return self.sparse_mlps[mlp_tag].get_acts(x, indices=indices)
+                    return sparse_mlp.get_acts(x, indices=indices)
                 else:
                     assert mlp_type == "Mo", "mlp_type must be one of Ra, A, M, Rm, Mo"
                     mlp_out = self.torso[layer].mlp(x)
-                    return self.sparse_mlps[mlp_tag].get_acts(mlp_out, indices=indices)
+                    return sparse_mlp.get_acts(mlp_out, indices=indices)
 
             return get_sparse_mlp_acts
     
