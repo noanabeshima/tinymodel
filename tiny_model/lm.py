@@ -21,9 +21,9 @@ DEFAULT_SPARSE_MLPS = {
     
 
     # "M3": "mlp_map/M3_S-1_B0_P0",
-    "A0": "attn_test/A0_S-2_B0_P1",
-    "A1": "attn_test/A1_S-3_B0_P1",
-    "A2": "attn_test/A2_S-3_B0_P1",
+    "A0": "attn_test/A0_S-2_R1_P0",
+    "A1": "attn_test/A1_S-3_R1_P0",
+    "A2": "attn_test/A2_S-3_R1_P0",
     # "A3": "attn_out/A3_S-1_B2_P1",
 }
 
