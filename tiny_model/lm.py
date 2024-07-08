@@ -119,6 +119,7 @@ class TinyModel(nn.Module):
 
         # Dict from mlp_tag to sparse mlp
         self.sparse_mlps = nn.ModuleDict()
+        
 
     @property
     def dtype(self):
@@ -128,7 +129,7 @@ class TinyModel(nn.Module):
     def device(self):
         return self.embed.weight.device
 
-    def forward(self, tok_ids, return_idx=None):
+    def forward(self, tok_ids, return_idx=None, disable_flashattn=False):
         T = tok_ids.shape[-1]
         x = self.embed(tok_ids) + self.pos_embed[:, :T]
         if return_idx is not None:
@@ -137,7 +138,7 @@ class TinyModel(nn.Module):
             for layer_idx, layer in enumerate(self.torso):
                 if layer_idx == return_idx:
                     return x
-                x = layer(x)
+                x = layer(x, disable_flashattn=disable_flashattn)
         else:
             x = self.torso(x)
             logits = self.lm_head(x)
@@ -252,7 +253,7 @@ class TinyModel(nn.Module):
             mlp_tag = index
             return self.sparse_mlp(mlp_tag)
 
-    def register_sparse(self, mlp_tag=None, mlp=None, include_error=False, detach_error=False, detach_pred=False):
+    def register_sparse(self, mlp_tag=None, mlp=None, include_error=True, detach_error=True, detach_pred=False):
         assert not (mlp_tag is None and mlp is None)
 
         parse_output = parse_mlp_tag(mlp_tag)

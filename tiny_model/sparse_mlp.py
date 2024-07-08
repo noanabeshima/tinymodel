@@ -8,7 +8,7 @@ class SparseModelError(nn.Module):
         super().__init__()
         pass
     def forward(self, pred, target):
-        return (target - pred)
+        return (target - pred.detach())
 
 
 class SparseMLP(nn.Module):
@@ -26,7 +26,7 @@ class SparseMLP(nn.Module):
         self.detach_pred = detach_pred
 
         if self.include_error:
-            self.get_eps = SparseModelError()
+            self.get_eps = SparseModelError()        
 
     def get_acts(self, x, indices=None):
         """Indices are either a slice, an int, or a list of ints"""
@@ -35,7 +35,7 @@ class SparseMLP(nn.Module):
         preacts = x @ self.encoder.weight.T[:, indices] + self.encoder.bias[indices]
         return self.act(preacts)
 
-    def __call__(self, x, target=None, eps=True):
+    def __call__(self, x, target=None):
         preacts = self.encoder(x)
         acts = self.act(preacts)
         pred = self.decoder(acts)
@@ -44,10 +44,7 @@ class SparseMLP(nn.Module):
             pred = pred.detach()
         
         if self.include_error:
-            if target is None:
-                target = x
-            
-            error = self.get_error(pred, target)
+            error = self.get_eps(pred, target)
             
             if self.detach_error:
                 error = error.detach()
@@ -57,7 +54,7 @@ class SparseMLP(nn.Module):
             return pred
 
     @classmethod
-    def from_pretrained(self, state_dict_path: str, repo_id="noanabeshima/tiny_model", include_error=False, detach_error=False, detach_pred=False, **kwargs):
+    def from_pretrained(self, state_dict_path: str, repo_id="noanabeshima/tiny_model", include_error=True, detach_error=True, detach_pred=False, **kwargs):
         """Uses huggingface_hub to download an SAE/sparse MLP."""
         state_dict = torch.load(
             hf_hub_download(repo_id=repo_id, filename=state_dict_path + ".pt")
