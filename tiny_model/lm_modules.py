@@ -80,17 +80,23 @@ class Attention(nn.Module):
 
         vs = einops.rearrange(v, "b s (h d) -> b h s d", h=self.n_heads)
         vs = self.vs(vs)  # hookpoint
-
+        
         # force torch to use flash attention 2
-        if x.dtype == torch.float16 or x.dtype == torch.bfloat16 and not disable_flashattn:
+        if (x.dtype == torch.float16 or x.dtype == torch.bfloat16) and not disable_flashattn:
             with torch.backends.cuda.sdp_kernel(
                 enable_flash=True, enable_math=False, enable_mem_efficient=False
             ):
                 head_writeouts = F.scaled_dot_product_attention(
                     qs, ks, vs, is_causal=True
                 )
+        elif disable_flashattn:
+            with torch.backends.cuda.sdp_kernel(
+                enable_flash=False, enable_math=True, enable_mem_efficient=True
+            ):
+                head_writeouts = F.scaled_dot_product_attention(qs, ks, vs, is_causal=True)
         else:
             head_writeouts = F.scaled_dot_product_attention(qs, ks, vs, is_causal=True)
+        
         head_writeouts = self.head_writeouts(head_writeouts)  # hookpoint
 
         catted_head_writeouts = einops.rearrange(head_writeouts, "b h q d -> b q (h d)")
@@ -162,7 +168,7 @@ class TransformerBlock(nn.Module):
     def forward(self, x, disable_flashattn=False):
         x = self.res_attn(x)  # hookpoint
         assert x is not None
-
+        
         attn_out = self.attn(x, disable_flashattn=disable_flashattn)
         if self.attn_sae is not None:
             attn_out = self.attn_sae(x=attn_out, target=attn_out)

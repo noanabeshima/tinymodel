@@ -132,17 +132,13 @@ class TinyModel(nn.Module):
     def forward(self, tok_ids, return_idx=None, disable_flashattn=False):
         T = tok_ids.shape[-1]
         x = self.embed(tok_ids) + self.pos_embed[:, :T]
-        if return_idx is not None:
-            assert isinstance(return_idx, int)
-            assert 0 <= return_idx and return_idx <= self.n_layers
-            for layer_idx, layer in enumerate(self.torso):
-                if layer_idx == return_idx:
-                    return x
-                x = layer(x, disable_flashattn=disable_flashattn)
-        else:
-            x = self.torso(x)
-            logits = self.lm_head(x)
-            return F.log_softmax(logits, dim=-1)
+
+        for layer_idx, layer in enumerate(self.torso):
+            if layer_idx == return_idx:
+                return x
+            x = layer(x, disable_flashattn=disable_flashattn)
+        logits = self.lm_head(x)
+        return F.log_softmax(logits, dim=-1)
 
     def generate(self, prompt, n_toks=50, temperature=0.8, break_on_end=True):
         assert temperature >= 0.0
