@@ -163,6 +163,7 @@ class TransformerBlock(nn.Module):
 
         self.attn_sae = None
         self.transcoder = None
+        self.mlp_sae = None
         
 
     def forward(self, x, disable_flashattn=False):
@@ -184,6 +185,9 @@ class TransformerBlock(nn.Module):
 
         if self.transcoder is not None:
             mlp_out = self.transcoder(x=x, target=mlp_out)
+        
+        if self.mlp_sae is not None:
+            mlp_out = self.mlp_sae(mlp_out, target=mlp_out)
 
         x = mlp_out + x
         assert x is not None
@@ -191,7 +195,3 @@ class TransformerBlock(nn.Module):
         x = self.res_final(x)  # hookpoint
         assert x is not None
         return x
-    
-    def wipe_sparse(self):
-        self.attn_sae = None
-        self.transcoder = None
