@@ -12,28 +12,30 @@ from .sparse_mlp import SparseMLP
 from .tokenization.tokenization import dec, enc
 
 DEFAULT_SPARSE_MLPS = {
-    # "M0": "mlp_map_test/M0_S-6_R2_P2",
-    # "M1": "mlp_map_test/M1_S-4_R8_P2",
-    "M2": "mlp_map_test/M2_S-2_R1_P0",
-
-    "M0": "mlp_map_test/M0_S-2_R1_P0",
-    "M1": "mlp_map_test/M1_S-2_R1_P0",
+    "T0": "mlp_map_test/M0_S-3_R1_P0",
+    "T1": "mlp_map_test/M1_S-3_R1_P0",
+    "T2": "mlp_map_test/M2_S-3_R1_P0",
+    "T3": "mlp_map_test/M3_S-3_R1_P0",
     
-
-    # "M3": "mlp_map/M3_S-1_B0_P0",
-    "A0": "attn_test/A0_S-2_R1_P0",
+    "M0": "mlp_out/Mo0_S-3_R1_P0",
+    "M1": "mlp_out/Mo1_S-3_R1_P0",
+    "M2": "mlp_out/Mo2_S-3_R1_P0",
+    "M3": "mlp_out/Mo3_S-3_R1_P0",
+    
+    "A0": "attn_test/A0_S-3_R1_P0",
     "A1": "attn_test/A1_S-3_R1_P0",
     "A2": "attn_test/A2_S-3_R1_P0",
-    # "A3": "attn_out/A3_S-1_B2_P1",
+    "A3": "attn_out/A3_S-3_R1_P0",
 }
 
 
 def parse_mlp_tag(mlp_tag):
     defaults_tag_pat = re.compile(
-        r"(?P<mlp_type>(M|Rm|Ra|A|Mo))(?P<layer>\d+)(\D(?P<feature_idx>\d+))?"
+        r"(?P<mlp_type>(T|M|Rm|Ra|A|Mo))(?P<layer>\d+)(\D(?P<feature_idx>\d+))?"
     )
     defaults_match = defaults_tag_pat.fullmatch(mlp_tag)
-    file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>(Mo|M|A|Rm|Ra))(?P<layer>\d+)_S[-\d]+.{0,6}_P\d+)([^\d](?P<feature_idx>\d+))?')
+    
+    file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>(T|Mo|M|A|Rm|Ra))(?P<layer>\d+)_S[-\d]+.{0,6}_P\d+)([^\d](?P<feature_idx>\d+))?')
     full_file_match = file_tag_pat.fullmatch(mlp_tag)
 
     if defaults_match:
@@ -53,9 +55,10 @@ def parse_mlp_tag(mlp_tag):
         # try interpreting the mlp_tag as a filename
 
         mlp_type_to_file = {
-            # 'Mo': 'mlp_out',
+            'M': 'mlp_out',
+            'Mo': 'mlp_out',
             'A': 'attn_test',
-            'M': 'mlp_map_test',
+            'T': 'mlp_map_test',
             # 'Ra': 'res_pre_attn',
             # 'Rm': 'res_pre_mlp'
         }
@@ -70,9 +73,6 @@ def parse_mlp_tag(mlp_tag):
         return file, mlp_type, layer, feature_idx
     else:
         return False
-        
-        
-
 
 
 class TinyModel(nn.Module):
@@ -118,7 +118,7 @@ class TinyModel(nn.Module):
             ), "from_pretrained kwarg must be False or a string specifying model"
 
         # Dict from mlp_tag to sparse mlp
-        self.sparse_mlps = nn.ModuleDict()
+        self._sparse_mlps = nn.ModuleDict()
         
 
     @property
@@ -128,6 +128,36 @@ class TinyModel(nn.Module):
     @property
     def device(self):
         return self.embed.weight.device
+    
+    @property
+    def sparse_mlps(self):
+        sparse_mlps = dict(self._sparse_mlps)
+        res = {}
+        for layer in range(4):
+            for mlp_type in ['Ra', 'A', 'Rm', 'T', 'M', 'Mo']:
+                mlp_tag = f"{mlp_type}{layer}"
+                if mlp_tag in sparse_mlps:
+                    res[mlp_tag] = sparse_mlps[mlp_tag]
+        return res
+
+    def get_upstream(self, downstream_tag):
+        assert downstream_tag in self.sparse_mlps, f'downstream_tag `{downstream_tag}` not found in self.sparse_mlps'
+        res = {}
+        for mlp_tag, mlp in self.sparse_mlps.items():
+            if mlp_tag == downstream_tag:
+                break
+            else:
+                res[mlp_tag] = mlp
+        return res
+    
+    def get_downstream(self, upstream_tag):
+        assert upstream_tag in self.sparse_mlps, f'upstream_tag `{upstream_tag}` not found in self.sparse_mlps'
+        res = {}
+        mlp_tags = list(self.sparse_mlps.keys())
+        downstream_tags = mlp_tags[mlp_tags.index(upstream_tag)+1:]
+        res = {ds_tag: self.sparse_mlps[ds_tag] for ds_tag in downstream_tags}
+        return res
+    
 
     def forward(self, tok_ids, return_idx=None, disable_flashattn=False):
         T = tok_ids.shape[-1]
@@ -160,7 +190,7 @@ class TinyModel(nn.Module):
                 break
         return dec(toks[:, 1:])[0]
 
-    def sparse_mlp(self, mlp_tag=None, mlp=None):
+    def get_sparse_act_fn(self, mlp_tag=None, mlp=None):
         '''
         Returns `get_sparse_mlp_acts`, which takes in tok_ids and returns sparse mlp activations. It optionally allows `indices`.
         '''
@@ -222,10 +252,10 @@ class TinyModel(nn.Module):
                 if mlp_type == "A":
                     return sparse_mlp.get_acts(attn_out, indices=indices)
                 x = attn_out + x
-                if mlp_type in {"M", "Rm"}:
+                if mlp_type in {"T", "Rm"}:
                     return sparse_mlp.get_acts(x, indices=indices)
                 else:
-                    assert mlp_type == "Mo", "mlp_type must be one of Ra, A, M, Rm, Mo"
+                    assert mlp_type == "M", "mlp_type must be one of Ra, A, M, Rm, T"
                     mlp_out = self.torso[layer].mlp(x)
                     return sparse_mlp.get_acts(mlp_out, indices=indices)
 
@@ -247,10 +277,29 @@ class TinyModel(nn.Module):
             return self.torso[index]
         else:
             mlp_tag = index
-            return self.sparse_mlp(mlp_tag)
+            return self.get_sparse_act_fn(mlp_tag)
 
     def register_sparse(self, mlp_tag=None, mlp=None, include_error=True, detach_error=True, detach_pred=False):
         assert not (mlp_tag is None and mlp is None)
+        
+        # If mlp_tag is a list, interpret mlp_tag and mlp as being lists of mlps to add
+        if isinstance(mlp_tag, list):
+            assert all([isinstance(tag, str) for tag in mlp_tag]),\
+                'if mlp_tag is a list, must be a list of strings (mlp tags)'
+            assert mlp is None or len(mlp) == len(mlp_tag)
+            
+            if mlp is None:
+                mlp = [None for _ in range(len(mlp_tag))]
+            
+            # make arguments plural to make clear that they're lists
+            mlp_tags, provided_mlps = mlp_tag, mlp
+            
+            kwargs = dict(include_error=include_error, detach_error=detach_error, detach_pred=detach_pred)
+            for tag, provided_mlp in zip(mlp_tags, provided_mlps):
+                self.register_sparse(mlp_tag=tag, mlp=provided_mlp, **kwargs)
+            
+            return
+
 
         parse_output = parse_mlp_tag(mlp_tag)
         
@@ -280,6 +329,10 @@ class TinyModel(nn.Module):
                 transformer_block.attn_sae = sparse_mlp
             if mlp_type == "M":
                 transformer_block.transcoder = sparse_mlp
+            
+            self._sparse_mlps[mlp_tag] = sparse_mlp
+            
+            
 
 
 def get_state_dict(model_fname="tiny_model"):
