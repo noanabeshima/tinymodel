@@ -327,8 +327,12 @@ class TinyModel(nn.Module):
             transformer_block = self.torso[layer]
             if mlp_type == "A":
                 transformer_block.attn_sae = sparse_mlp
-            if mlp_type == "M":
+            elif mlp_type == "T":
                 transformer_block.transcoder = sparse_mlp
+            elif mlp_type == 'M':
+                transformer_block.mlp_sae = sparse_mlp
+            else:
+                raise ValueError(f'mlp_type {mlp_type} is unsupported.')
             
             self._sparse_mlps[mlp_tag] = sparse_mlp
             
