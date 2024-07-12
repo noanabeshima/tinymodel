@@ -17,13 +17,13 @@ DEFAULT_SPARSE_MLPS = {
     "T2": "mlp_map_test/M2_S-3_R1_P0",
     "T3": "mlp_map_test/M3_S-3_R1_P0",
     
-    "M0": "mlp_out/Mo0_S-3_R1_P0",
-    "M1": "mlp_out/Mo1_S-3_R1_P0",
-    "M2": "mlp_out/Mo2_S-3_R1_P0",
-    "M3": "mlp_out/Mo3_S-3_R1_P0",
+    "M0": "mlp_out/Mo0_S-4_R1_P0",
+    "M1": "mlp_out/Mo1_S-4_R1_P0",
+    "M2": "mlp_out/Mo2_S-4_R1_P0",
+    "M3": "mlp_out/Mo3_S-4_R1_P0",
     
-    "A0": "attn_test/A0_S-3_R1_P0",
-    "A1": "attn_test/A1_S-3_R1_P0",
+    "A0": "attn_test/A0_S-4_R1_P0",
+    "A1": "attn_test/A1_S-4_R1_P0",
     "A2": "attn_test/A2_S-3_R1_P0",
     "A3": "attn_out/A3_S-3_R1_P0",
 }
@@ -117,8 +117,18 @@ class TinyModel(nn.Module):
                 from_pretrained is False
             ), "from_pretrained kwarg must be False or a string specifying model"
 
-        # Dict from mlp_tag to sparse mlp
-        self._sparse_mlps = nn.ModuleDict()
+        # mlp tag list
+        self._sparse_tags = []
+        
+        '''
+        If using NNSight, you can't return NNsight wrapped modules via self.sparse_mlps
+        unless self.envoy is set. E.G.
+        
+        lm = TinyModel()
+        model = NNSight(lm)
+        lm.nnsight_proxy = model
+        '''
+        self.nnsight_proxy = None
         
 
     @property
@@ -130,14 +140,24 @@ class TinyModel(nn.Module):
         return self.embed.weight.device
     
     @property
-    def sparse_mlps(self):
-        sparse_mlps = dict(self._sparse_mlps)
+    def proxy(self):
+        return self if self.nnsight_proxy is None else self.nnsight_proxy
+    
+    @property
+    def sparse_mlps(self):            
         res = {}
         for layer in range(4):
-            for mlp_type in ['Ra', 'A', 'Rm', 'T', 'M', 'Mo']:
+            for mlp_type in ['A', 'T', 'M', 'Mo']:
                 mlp_tag = f"{mlp_type}{layer}"
-                if mlp_tag in sparse_mlps:
-                    res[mlp_tag] = sparse_mlps[mlp_tag]
+                if mlp_tag in self._sparse_tags:
+                    if mlp_type == 'A':
+                        res[mlp_tag] = self.proxy.torso[layer].attn_sae
+                    # elif mlp_type == 'T':
+                    #     res[mlp_tag] = self.proxy.torso[layer].transcoder
+                    elif mlp_type in {'M', 'Mo'}:
+                        res[mlp_tag] = self.proxy.torso[layer].mlp_sae
+                    else:
+                        raise ValueError(f'mlp_tag `{mlp_tag}` not found.')
         return res
 
     def get_upstream(self, downstream_tag):
@@ -282,6 +302,7 @@ class TinyModel(nn.Module):
     def register_sparse(self, mlp_tag=None, mlp=None, include_error=True, detach_error=True, detach_pred=False):
         assert not (mlp_tag is None and mlp is None)
         
+        
         # If mlp_tag is a list, interpret mlp_tag and mlp as being lists of mlps to add
         if isinstance(mlp_tag, list):
             assert all([isinstance(tag, str) for tag in mlp_tag]),\
@@ -317,14 +338,18 @@ class TinyModel(nn.Module):
                                                         include_error=include_error,
                                                         detach_error=detach_error,
                                                         detach_pred=detach_pred
-                                                      ).to(
-                                                        device=self.device,
-                                                        dtype=self.dtype
                                                       )
             else:
-                sparse_mlp = mlp.to(device=self.device, dtype=self.dtype)
-
-            transformer_block = self.torso[layer]
+                sparse_mlp = mlp
+            
+            sparse_mlp = sparse_mlp.to(device=self.device, dtype=self.dtype)
+            
+            if mlp_type != "T":
+                sparse_mlp.register_full_backward_hook(lambda m, grad_in, grad_out: (grad_out,))
+            else:
+                assert False, 'transcoder backwards unimplemented.'
+            
+            transformer_block = self.proxy.torso[layer]
             if mlp_type == "A":
                 transformer_block.attn_sae = sparse_mlp
             elif mlp_type == "T":
@@ -334,7 +359,14 @@ class TinyModel(nn.Module):
             else:
                 raise ValueError(f'mlp_type {mlp_type} is unsupported.')
             
-            self._sparse_mlps[mlp_tag] = sparse_mlp
+            
+            self._sparse_tags.append(mlp_tag)
+    
+    def wipe_sparse(self):
+        for block in self.proxy.torso:
+            block.attn_sae = None
+            block.transcoder = None
+            block.mlp_sae = None
             
             
 

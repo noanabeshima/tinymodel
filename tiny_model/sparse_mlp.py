@@ -6,7 +6,6 @@ from huggingface_hub import hf_hub_download
 class SparseModelError(nn.Module):
     def __init__(self):
         super().__init__()
-        pass
     def forward(self, pred, target):
         return (target - pred.detach())
 
