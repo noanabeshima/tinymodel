@@ -188,4 +188,9 @@ class Tokenizer:
 
 
 tokenizer = Tokenizer()
-toks = np.array([dec(tok_id).replace("\n", "↵").replace(" ", "⋅") for tok_id in range(10_000)])
+raw_toks = np.array([dec(tok_id) for tok_id in range(10_000)])
+pretty_toks = np.array([tok.replace("\n", "↵").replace(" ", "⋅") for tok in raw_toks])
+import json
+with open(f"{current_dir}/words.json", "r") as f:
+    multi_tok_words = np.array(json.load(f))
+words = np.concatenate((raw_toks, multi_tok_words), axis=0)
