@@ -347,7 +347,8 @@ class TinyModel(nn.Module):
             if mlp_type != "T":
                 sparse_mlp.register_full_backward_hook(lambda m, grad_in, grad_out: (grad_out,))
             else:
-                assert False, 'transcoder backwards unimplemented.'
+                # [STUB] - warning that transcoders don't backward through transcoder errors.
+                pass
             
             transformer_block = self.proxy.torso[layer]
             if mlp_type == "A":
