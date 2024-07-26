@@ -161,27 +161,31 @@ class TransformerBlock(nn.Module):
         self.res_mlp = HookPoint()
         self.res_final = HookPoint()
 
+        self.res_pre_attn_sae = None
         self.attn_sae = None
+        self.res_pre_mlp_sae = None
         self.transcoder = None
         self.mlp_sae = None
         
 
     def forward(self, x, disable_flashattn=False):
         x = self.res_attn(x)  # hookpoint
-        assert x is not None
+        
+        if self.res_pre_attn_sae is not None:
+            x = self.res_pre_attn_sae(x)
         
         attn_out = self.attn(x, disable_flashattn=disable_flashattn)
         if self.attn_sae is not None:
             attn_out = self.attn_sae(x=attn_out, target=attn_out)
 
         x = attn_out + x
-        assert x is not None
 
         x = self.res_mlp(x)  # hookpoint
-        assert x is not None
+
+        if self.res_pre_mlp_sae is not None:
+            x = self.res_pre_mlp_sae(x)
 
         mlp_out = self.mlp(x)
-        assert mlp_out is not None
 
         if self.transcoder is not None:
             mlp_out = self.transcoder(x=x, target=mlp_out)
@@ -190,8 +194,6 @@ class TransformerBlock(nn.Module):
             mlp_out = self.mlp_sae(mlp_out, target=mlp_out)
 
         x = mlp_out + x
-        assert x is not None
 
         x = self.res_final(x)  # hookpoint
-        assert x is not None
         return x
