@@ -26,6 +26,16 @@ DEFAULT_SPARSE_MLPS = {
     "A1": "attn/A1_S-1_R1_P0",
     "A2": "attn/A2_S-3_R1_P0",
     "A3": "attn/A3_S-3_R1_P0",
+
+    "Ra0": "res_pre_attn/Ra0_S-3_R1_P0",
+    "Ra1": "res_pre_attn/Ra1_S-3_R1_P0",
+    "Ra2": "res_pre_attn/Ra2_S-3_R1_P0",
+    "Ra3": "res_pre_attn/Ra3_S-3_R1_P0",
+
+    "Rm0": "res_pre_mlp/Rm0_S-3_R1_P0",
+    "Rm1": "res_pre_mlp/Rm1_S-3_R1_P0",
+    "Rm2": "res_pre_mlp/Rm2_S-3_R1_P0",
+    "Rm3": "res_pre_mlp/Rm3_S-3_R1_P0",
 }
 
 
@@ -59,8 +69,8 @@ def parse_mlp_tag(mlp_tag):
             'Mo': 'mlp',
             'A': 'attn_test',
             'T': 'mlp_map_test',
-            # 'Ra': 'res_pre_attn',
-            # 'Rm': 'res_pre_mlp'
+            'Ra': 'res_pre_attn',
+            'Rm': 'res_pre_mlp'
         }
 
         match_groups = full_file_match.groupdict()
@@ -144,16 +154,20 @@ class TinyModel(nn.Module):
         return self if self.nnsight_proxy is None else self.nnsight_proxy
     
     @property
-    def sparse_mlps(self):            
+    def sparse_mlps(self):
         res = {}
         for layer in range(4):
-            for mlp_type in ['A', 'T', 'M', 'Mo']:
+            for mlp_type in ['A', 'T', 'M', 'Mo', 'Ra', 'Rm']:
                 mlp_tag = f"{mlp_type}{layer}"
                 if mlp_tag in self._sparse_tags:
-                    if mlp_type == 'A':
+                    if mlp_type == 'Ra':
+                        res[mlp_tag] = self.proxy.torso[layer].res_pre_attn_sae
+                    elif mlp_type == 'A':
                         res[mlp_tag] = self.proxy.torso[layer].attn_sae
-                    # elif mlp_type == 'T':
-                    #     res[mlp_tag] = self.proxy.torso[layer].transcoder
+                    elif mlp_type == 'Rm':
+                        res[mlp_tag] = self.proxy.torso[layer].res_pre_mlp_sae
+                    elif mlp_type == 'T':
+                        res[mlp_tag] = self.proxy.torso[layer].transcoder
                     elif mlp_type in {'M', 'Mo'}:
                         res[mlp_tag] = self.proxy.torso[layer].mlp_sae
                     else:
@@ -351,12 +365,18 @@ class TinyModel(nn.Module):
                 pass
             
             transformer_block = self.proxy.torso[layer]
-            if mlp_type == "A":
+            if mlp_type == 'Ra':
+                transformer_block.res_pre_attn_sae = sparse_mlp
+            elif mlp_type == "A":
                 transformer_block.attn_sae = sparse_mlp
+            elif mlp_type == 'Rm':
+                transformer_block.res_pre_mlp_sae = sparse_mlp
             elif mlp_type == "T":
                 transformer_block.transcoder = sparse_mlp
             elif mlp_type == 'M':
                 transformer_block.mlp_sae = sparse_mlp
+            
+            
             else:
                 raise ValueError(f'mlp_type {mlp_type} is unsupported.')
             
