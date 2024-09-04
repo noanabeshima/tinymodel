@@ -69,3 +69,30 @@ class SparseMLP(nn.Module):
         mlp = SparseMLP(d_model=d_model, n_features=n_features, include_error=include_error, detach_error=detach_error, detach_pred=detach_pred)
         mlp.load_state_dict(state_dict)
         return mlp
+
+def get_sliced_mlp(mlp: SparseMLP, start: int, end: int):
+    assert isinstance(start, int) and isinstance(end, int), (start, end)
+    assert end > start
+    assert end <= mlp.n_features and start >= 0
+    new_mlp = SparseMLP(d_model=mlp.d_model, n_features=end-start, include_error=mlp.include_error, detach_error=mlp.detach_error, detach_pred=mlp.detach_pred)
+    new_mlp.encoder.weight.data = mlp.encoder.weight.data[start:end]
+    new_mlp.encoder.bias.data = mlp.encoder.bias.data[start:end]
+    new_mlp.decoder.weight.data = mlp.decoder.weight.data[:,start:end]
+    new_mlp.decoder.bias.data = mlp.decoder.bias.data
+
+    return new_mlp
+
+from typing import Iterable
+
+def get_masked_mlp(mlp: SparseMLP, mask: list[int]):
+    assert len(mask) > 0
+    assert isinstance(mask, Iterable)
+    assert all([isinstance(it, int) for it in mask])
+
+    new_mlp = SparseMLP(d_model=mlp.d_model, n_features=len(mask), include_error=mlp.include_error, detach_error=mlp.detach_error, detach_pred=mlp.detach_pred)
+    new_mlp.encoder.weight.data = mlp.encoder.weight.data[mask]
+    new_mlp.encoder.bias.data = mlp.encoder.bias.data[mask]
+    new_mlp.decoder.weight.data = mlp.decoder.weight.data[:,mask]
+    new_mlp.decoder.bias.data = mlp.decoder.bias.data
+
+    return new_mlp

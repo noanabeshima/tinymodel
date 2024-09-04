@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from huggingface_hub import hf_hub_download
 
 from .lm_modules import TransformerBlock
-from .sparse_mlp import SparseMLP
+from .sparse_mlp import SparseMLP, get_sliced_mlp, get_masked_mlp
 from .tokenization.tokenization import dec, enc
 
 DEFAULT_SPARSE_MLPS = {
