@@ -8,7 +8,7 @@ This library is in an alpha state, it probably has some bugs. Please let me know
 
 
 ```
-from tiny_model import TinyModel, tokenizer
+from tinymodel import TinyModel, tokenizer
 
 lm = TinyModel()
 
