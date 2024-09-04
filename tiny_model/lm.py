@@ -44,8 +44,9 @@ def parse_mlp_tag(mlp_tag):
         r"(?P<mlp_type>(T|M|Rm|Ra|A|Mo))(?P<layer>\d+)(\D(?P<feature_idx>\d+))?"
     )
     defaults_match = defaults_tag_pat.fullmatch(mlp_tag)
-    
-    file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>(T|Mo|M|A|Rm|Ra))(?P<layer>\d+)_S[-\d]+.{0,6}_P\d+)([^\d](?P<feature_idx>\d+))?')
+
+    # file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>(T|Mo|M|A|Rm|Ra))(?P<layer>\d+)_S[-\d]+.{0,6}_P\d+)([^\d](?P<feature_idx>\d+))?')
+    file_tag_pat = re.compile(r'(?P<full_name>(?P<base_dir>.+/)?(?P<mlp_type>(T|Mo|M|A|Rm|Ra))(?P<layer>\d+)(_N[\d]+)?(_S[-\d]+)(.{0,6}_P\d+)?([^\d](?P<feature_idx>\d+))?)')
     full_file_match = file_tag_pat.fullmatch(mlp_tag)
 
     if defaults_match:
@@ -60,6 +61,7 @@ def parse_mlp_tag(mlp_tag):
         feature_idx = None if feature_idx is None else int(feature_idx)
 
         assert mlp_type+str(layer) in DEFAULT_SPARSE_MLPS
+        
         return DEFAULT_SPARSE_MLPS[mlp_type+str(layer)], mlp_type, layer, feature_idx
     elif full_file_match:
         # try interpreting the mlp_tag as a filename
@@ -76,7 +78,11 @@ def parse_mlp_tag(mlp_tag):
         match_groups = full_file_match.groupdict()
 
         full_name, mlp_type, layer, feature_idx = match_groups['full_name'], match_groups['mlp_type'], int(match_groups['layer']), match_groups['feature_idx']
-        file = mlp_type_to_file[mlp_type] + '/' + full_name
+        
+        if 'base_dir' in match_groups:
+            file = full_name
+        else:
+            file = mlp_type_to_file[mlp_type] + '/' + full_name
 
         feature_idx = None if feature_idx is None else int(feature_idx)
 
@@ -173,6 +179,7 @@ class TinyModel(nn.Module):
                     else:
                         raise ValueError(f'mlp_tag `{mlp_tag}` not found.')
         return res
+
 
     def get_upstream(self, downstream_tag):
         assert downstream_tag in self.sparse_mlps, f'downstream_tag `{downstream_tag}` not found in self.sparse_mlps'
@@ -289,7 +296,7 @@ class TinyModel(nn.Module):
                 if mlp_type in {"T", "Rm"}:
                     return sparse_mlp.get_acts(x, indices=indices)
                 else:
-                    assert mlp_type == "M", "mlp_type must be one of Ra, A, M, Rm, T"
+                    assert mlp_type in {"M", "Mo"}, "mlp_type must be one of Ra, A, M, Rm, T"
                     mlp_out = self.torso[layer].mlp(x)
                     return sparse_mlp.get_acts(mlp_out, indices=indices)
 
@@ -313,9 +320,8 @@ class TinyModel(nn.Module):
             mlp_tag = index
             return self.get_sparse_act_fn(mlp_tag)
 
-    def register_sparse(self, mlp_tag=None, mlp=None, include_error=True, detach_error=True, detach_pred=False):
+    def register_sparse(self, mlp_tag=None, mlp=None, include_error=True, detach_error=True, detach_pred=False, feat_mask=None):
         assert not (mlp_tag is None and mlp is None)
-        
         
         # If mlp_tag is a list, interpret mlp_tag and mlp as being lists of mlps to add
         if isinstance(mlp_tag, list):
@@ -356,6 +362,9 @@ class TinyModel(nn.Module):
             else:
                 sparse_mlp = mlp
             
+            if feat_mask is not None:
+                sparse_mlp = get_masked_mlp(sparse_mlp, mask=feat_mask)
+            
             sparse_mlp = sparse_mlp.to(device=self.device, dtype=self.dtype)
             
             if mlp_type != "T":
@@ -388,6 +397,7 @@ class TinyModel(nn.Module):
             block.attn_sae = None
             block.transcoder = None
             block.mlp_sae = None
+        self._sparse_tags = []
             
             
 
@@ -402,6 +412,7 @@ def get_state_dict(model_fname="tiny_model"):
     ], "There are two models available: `tiny_model` and `tiny_model_1_epoch`."
     state_dict = torch.load(
         hf_hub_download(repo_id="noanabeshima/tiny_model", filename=f"{model_fname}.pt"),
-        map_location=torch.device('cpu')
+        map_location=torch.device('cpu'),
+        weights_only=True
     )
     return state_dict
