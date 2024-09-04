@@ -249,13 +249,11 @@ class TinyModel(nn.Module):
 
 
 def get_state_dict(model_fname="tiny_model"):
-    """
-    There are two models available: `tiny_model` and `tiny_model_1_epoch`.
-    """
     assert model_fname in [
         "tiny_model",
-        "tiny_model_1_epoch",
-    ], "There are two models available: `tiny_model` and `tiny_model_1_epoch`."
+        "tiny_model_2L_1E",
+        "tiny_model_2L_3E"
+    ], "There are 3 models available: `tiny_model`, `tiny_model_2L_1E`, and `tiny_model_2L_3E`."
     state_dict = torch.load(
         hf_hub_download(repo_id="noanabeshima/tiny_model", filename=f"{model_fname}.pt"),
         map_location=torch.device('cpu')
