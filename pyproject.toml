@@ -4,7 +4,7 @@ version = "0.1.2-2"
 description = "A small TinyStories LM with SAEs and transcoders"
 authors = ["Noa Nabeshima <noanabeshima@gmail.com>"]
 readme = "README.md"
-packages = [{include = "tiny_model"}]
+packages = [{include = "tinymodel"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -19,7 +19,7 @@ datasets = "^2.20.0"
 
 
 [[tool.poetry.source]]
-name = "tiny_model"
+name = "tinymodel"
 url = "https://github.com/noanabeshima/tiny_model"
 priority = "explicit"
 
