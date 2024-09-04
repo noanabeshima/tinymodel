@@ -56,7 +56,8 @@ class SparseMLP(nn.Module):
     def from_pretrained(self, state_dict_path: str, repo_id="noanabeshima/tiny_model", include_error=True, detach_error=True, detach_pred=False, **kwargs):
         """Uses huggingface_hub to download an SAE/sparse MLP."""
         state_dict = torch.load(
-            hf_hub_download(repo_id=repo_id, filename=state_dict_path + ".pt")
+            hf_hub_download(repo_id=repo_id, filename=state_dict_path + ".pt"),
+            weights_only=True
         )
         n_features, d_model = state_dict["encoder.weight"].shape
     

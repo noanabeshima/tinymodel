@@ -25,8 +25,8 @@ neo_tokenizer.add_special_tokens(
         "unk_token": "[UNK]",
     },
 )
-neo_tok_ids_to_ts = torch.load(f"{current_dir}/neo_tok_ids_to_ts.pt")
-ts_tok_ids_to_neo = torch.load(f"{current_dir}/ts_tok_ids_to_neo.pt")
+neo_tok_ids_to_ts = torch.load(f"{current_dir}/neo_tok_ids_to_ts.pt", weights_only=True)
+ts_tok_ids_to_neo = torch.load(f"{current_dir}/ts_tok_ids_to_neo.pt", weights_only=True)
 
 
 def clean_text(text):
