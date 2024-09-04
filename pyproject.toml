@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tinymodel"
-version = "0.1.1-9"
+version = "0.1.2.2-1"
 description = "A small TinyStories LM with SAEs and transcoders"
 authors = ["Noa Nabeshima <noanabeshima@gmail.com>"]
 readme = "README.md"
@@ -19,8 +19,8 @@ datasets = "^2.20.0"
 
 
 [[tool.poetry.source]]
-name = "tiny_model"
-url = "https://github.com/noanabeshima/tiny_model"
+name = "tinymodel"
+url = "https://github.com/noanabeshima/tinymodel"
 priority = "explicit"
 
 [build-system]
