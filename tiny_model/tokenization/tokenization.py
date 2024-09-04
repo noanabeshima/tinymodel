@@ -25,8 +25,8 @@ neo_tokenizer.add_special_tokens(
         "unk_token": "[UNK]",
     },
 )
-neo_tok_ids_to_ts = torch.load(f"{current_dir}/neo_tok_ids_to_ts.pt")
-ts_tok_ids_to_neo = torch.load(f"{current_dir}/ts_tok_ids_to_neo.pt")
+neo_tok_ids_to_ts = torch.load(f"{current_dir}/neo_tok_ids_to_ts.pt", weights_only=True)
+ts_tok_ids_to_neo = torch.load(f"{current_dir}/ts_tok_ids_to_neo.pt", weights_only=True)
 
 
 def clean_text(text):
@@ -188,7 +188,9 @@ class Tokenizer:
 
 
 tokenizer = Tokenizer()
-
-
 raw_toks = np.array([dec(tok_id) for tok_id in range(10_000)])
-toks = np.array([tok.replace("\n", "↵").replace(" ", "⋅") for tok in raw_toks])
+pretty_toks = np.array([tok.replace("\n", "↵").replace(" ", "⋅") for tok in raw_toks])
+import json
+with open(f"{current_dir}/words.json", "r") as f:
+    multi_tok_words = np.array(json.load(f))
+words = np.concatenate((raw_toks, multi_tok_words), axis=0)
