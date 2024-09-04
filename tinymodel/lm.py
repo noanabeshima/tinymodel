@@ -20,10 +20,10 @@ DEFAULT_SPARSE_MLPS = {
     "M2": "mlp/M2_S-2_R1_P0",
     "M3": "mlp/M3_S-1_B0_P0",
 
-    "A0": "attn/A0_S-2_R0_P0",
-    "A1": "attn/A1_S-1_R0_P0",
-    "A2": "attn/A2_S-2_R0_P0",
-    "A3": "attn/A3_S-1_R2_P0",
+    "A0": "attn/A0_S-2_R1_P0",
+    "A1": "attn/A1_S-1_R1_P0",
+    "A2": "attn/A2_S-2_R1_P0",
+    "A3": "attn/A3_S-1_R1_P0",
 }
 
 
