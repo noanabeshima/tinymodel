@@ -13,7 +13,6 @@ neo_tokenizer = AutoTokenizer.from_pretrained(
     "roneneldan/TinyStories",
     padding=True,
     truncation=True,
-    add_special_tokens=True,
     max_length=2048,
 )
 neo_tokenizer.model_max_length = 2048
