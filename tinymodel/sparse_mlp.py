@@ -35,8 +35,7 @@ class SparseMLP(nn.Module):
         return self.act(preacts)
 
     def __call__(self, x, target=None):
-        preacts = self.encoder(x)
-        acts = self.act(preacts)
+        acts = self.get_acts(x)
         pred = self.decoder(acts)
         
         if self.detach_pred:

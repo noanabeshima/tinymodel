@@ -22,10 +22,10 @@ DEFAULT_SPARSE_MLPS = {
     "M2": "mlp/M2_S-4_R1_P0",
     "M3": "mlp/M3_S-4_R1_P0",
     
-    "A0": "attn/A0_S-1_R1_P0",
-    "A1": "attn/A1_S-1_R1_P0",
-    "A2": "attn/A2_S-3_R1_P0",
-    "A3": "attn/A3_S-3_R1_P0",
+    "A0": "attn/A0_S-2_R1_P0",
+    "A1": "attn/A1_S-2_R1_P0",
+    "A2": "attn/A2_S-2_R1_P0",
+    "A3": "attn/A3_S-2_R1_P0",
 
     "Ra0": "res_pre_attn/Ra0_S-3_R1_P0",
     "Ra1": "res_pre_attn/Ra1_S-3_R1_P0",
@@ -41,12 +41,11 @@ DEFAULT_SPARSE_MLPS = {
 
 def parse_mlp_tag(mlp_tag):
     defaults_tag_pat = re.compile(
-        r"(?P<mlp_type>(T|M|Rm|Ra|A|Mo))(?P<layer>\d+)(\D(?P<feature_idx>\d+))?"
+        r"(?P<mlp_type>(M|Rm|Ra|A|M|Mo))(?P<layer>\d+)(\D(?P<feature_idx>\d+))?"
     )
     defaults_match = defaults_tag_pat.fullmatch(mlp_tag)
+    file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>(Mo|M|A|Rm|Ra))(?P<layer>\d+)_S[-\d]+.{0,6}_P\d+)([^\d](?P<feature_idx>\d+))?')
 
-    # file_tag_pat = re.compile(r'(?P<full_name>(?P<mlp_type>(T|Mo|M|A|Rm|Ra))(?P<layer>\d+)_S[-\d]+.{0,6}_P\d+)([^\d](?P<feature_idx>\d+))?')
-    file_tag_pat = re.compile(r'(?P<full_name>(?P<base_dir>.+/)?(?P<mlp_type>(T|Mo|M|A|Rm|Ra))(?P<layer>\d+)(_N[\d]+)?(_S[-\d]+)(.{0,6}_P\d+)?([^\d](?P<feature_idx>\d+))?)')
     full_file_match = file_tag_pat.fullmatch(mlp_tag)
 
     if defaults_match:
@@ -147,6 +146,9 @@ class TinyModel(nn.Module):
         self.nnsight_proxy = None
         
 
+        # Dict from mlp_tag to sparse mlp
+        self.sparse_mlps = nn.ModuleDict()
+
     @property
     def dtype(self):
         return self.embed.weight.dtype
@@ -154,7 +156,7 @@ class TinyModel(nn.Module):
     @property
     def device(self):
         return self.embed.weight.device
-    
+
     @property
     def proxy(self):
         return self if self.nnsight_proxy is None else self.nnsight_proxy
@@ -198,18 +200,21 @@ class TinyModel(nn.Module):
         downstream_tags = mlp_tags[mlp_tags.index(upstream_tag)+1:]
         res = {ds_tag: self.sparse_mlps[ds_tag] for ds_tag in downstream_tags}
         return res
-    
 
     def forward(self, tok_ids, return_idx=None, disable_flashattn=False):
         T = tok_ids.shape[-1]
         x = self.embed(tok_ids) + self.pos_embed[:, :T]
-
-        for layer_idx, layer in enumerate(self.torso):
-            if layer_idx == return_idx:
-                return x
-            x = layer(x, disable_flashattn=disable_flashattn)
-        logits = self.lm_head(x)
-        return F.log_softmax(logits, dim=-1)
+        if return_idx is not None:
+            assert isinstance(return_idx, int)
+            assert 0 <= return_idx and return_idx <= self.n_layers
+            for layer_idx, layer in enumerate(self.torso):
+                if layer_idx == return_idx:
+                    return x
+                x = layer(x, disable_flashattn=disable_flashattn)
+        else:
+            x = self.torso(x)
+            logits = self.lm_head(x)
+            return F.log_softmax(logits, dim=-1)
 
     def generate(self, prompt, n_toks=50, temperature=0.8, break_on_end=True):
         assert temperature >= 0.0
@@ -244,18 +249,6 @@ class TinyModel(nn.Module):
             assert False, dedent(
                 'Failed to parse mlp.'
             )
-            # assert False, dedent(
-            #     """
-            #     [STUB]
-            #     That\'s not a valid MLP tag. Here are some examples of MLP tags:
-            #     M0, A2, Rm0, Ra1, Mo3
-            #     They start with a string in [M, A, Rm, Ra, Mo]
-            #     representing mlp map, attn out SAE, residual pre-mlp SAE, residual pre-attn SAE, and MLP out SAE respectively.
-            #     and they end with a number representing the layer.
-
-            #     You can also specify individual feature_idxs, e.g. lm['A2.100'](tok_ids) to get the activations of neuron 100.
-            #     """
-            # )
         else:
             file, mlp_type, layer, feature_idx = parse_output
             mlp_tag = mlp_type + str(layer)
@@ -263,27 +256,6 @@ class TinyModel(nn.Module):
                 sparse_mlp = SparseMLP.from_pretrained(file).to(device=self.device, dtype=self.dtype)
             else:
                 sparse_mlp = mlp.to(device=self.device, dtype=self.dtype)
-            # else:
-            #     assert False, dedent(
-            #         """
-            #         mlp_tag {mlp_tag} not found in tiny_model.sparse_mlps or DEFAULT_SPARSE_MLPS
-
-            #         [STUB]: unimplemented                 
-            #         To add a sparse_mlp, do e.g.
-            #         tiny_model.set_saes({
-            #            \'M2\': SparseMLP.from_pretrained(\'mlp_map/M0_S-1_B0_P0\')
-            #         })
-                                     
-            #         Available keys (of form {mlp_type}{layer}) are:
-            #            M0..3 (for MLPs)
-            #            A0..3 (for Attn out)
-            #            Rm0..3 (for SAE on the residual before MLP)
-            #            Ra0..3 (for SAE on the residual stream before attn)
-            #            Mo0..3 (for SAE on MLP out)
-                    
-            #         See https://huggingface.co/noanabeshima/tiny_model/tree/main for available sparse MLPs.
-            #         """
-            #     )
 
             def get_sparse_mlp_acts(tok_ids, indices=feature_idx):
                 x = self.forward(tok_ids, return_idx=layer)
@@ -293,15 +265,18 @@ class TinyModel(nn.Module):
                 if mlp_type == "A":
                     return sparse_mlp.get_acts(attn_out, indices=indices)
                 x = attn_out + x
+
                 if mlp_type in {"T", "Rm"}:
                     return sparse_mlp.get_acts(x, indices=indices)
                 else:
                     assert mlp_type in {"M", "Mo"}, "mlp_type must be one of Ra, A, M, Rm, T"
+
                     mlp_out = self.torso[layer].mlp(x)
                     return sparse_mlp.get_acts(mlp_out, indices=indices)
 
             return get_sparse_mlp_acts
     
+
     def __getitem__(self, index):
         """
         To be used like:
@@ -384,7 +359,7 @@ class TinyModel(nn.Module):
                 transformer_block.transcoder = sparse_mlp
             elif mlp_type == 'M':
                 transformer_block.mlp_sae = sparse_mlp
-            
+
             
             else:
                 raise ValueError(f'mlp_type {mlp_type} is unsupported.')
@@ -399,13 +374,11 @@ class TinyModel(nn.Module):
             block.mlp_sae = None
         self._sparse_tags = []
             
-            
 
 
 def get_state_dict(model_fname="tiny_model"):
     state_dict = torch.load(
         hf_hub_download(repo_id="noanabeshima/tiny_model", filename=f"{model_fname}.pt"),
-        map_location=torch.device('cpu'),
-        weights_only=True
+        map_location=torch.device('cpu')
     )
     return state_dict
