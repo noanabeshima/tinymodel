@@ -379,6 +379,7 @@ class TinyModel(nn.Module):
 def get_state_dict(model_fname="tiny_model"):
     state_dict = torch.load(
         hf_hub_download(repo_id="noanabeshima/tiny_model", filename=f"{model_fname}.pt"),
-        map_location=torch.device('cpu')
+        map_location=torch.device('cpu'),
+        weights_only=True
     )
     return state_dict
