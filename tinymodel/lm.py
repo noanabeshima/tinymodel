@@ -144,10 +144,6 @@ class TinyModel(nn.Module):
         lm.nnsight_proxy = model
         '''
         self.nnsight_proxy = None
-        
-
-        # Dict from mlp_tag to sparse mlp
-        self.sparse_mlps = nn.ModuleDict()
 
     @property
     def dtype(self):
