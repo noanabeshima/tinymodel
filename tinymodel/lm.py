@@ -256,6 +256,7 @@ def get_state_dict(model_fname="tiny_model"):
     ], "There are 3 models available: `tiny_model`, `tiny_model_2L_1E`, and `tiny_model_2L_3E`."
     state_dict = torch.load(
         hf_hub_download(repo_id="noanabeshima/tiny_model", filename=f"{model_fname}.pt"),
-        map_location=torch.device('cpu')
+        map_location=torch.device('cpu'),
+        weights_only=True
     )
     return state_dict
