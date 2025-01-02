@@ -1,5 +1,8 @@
 # [TinyModel](https://github.com/noanabeshima/tiny_model)
 
+# There's currently an issue where Python 3.13 doesn't work with TinyModel, please use Python 3.11 or 3.12 instead. Python 3.11.11 definitely works.
+
+
 TinyModel is a 4 layer, 44M parameter model trained on [TinyStories V2](https://arxiv.org/abs/2305.07759) for mechanistic interpretability. It uses ReLU activations and no layernorms. It comes with trained SAEs and transcoders.
 
 It can be installed with `pip install tinymodel` for Python 3.11 and higher.
