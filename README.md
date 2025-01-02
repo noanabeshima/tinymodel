@@ -16,7 +16,7 @@ from tinymodel import TinyModel, tokenizer
 lm = TinyModel()
 
 # for inference
-tok_ids, attn_mask = tokenizer(['Once upon a time', 'In the forest'])
+tok_ids, padding_mask = tokenizer(['Once upon a time', 'In the forest'])
 logprobs = lm(tok_ids)
 
 # Get SAE/transcoder acts
