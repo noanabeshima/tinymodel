@@ -15,10 +15,10 @@ DEFAULT_SPARSE_MLPS = {
     # "M0": "mlp_map_test/M0_S-6_R2_P2",
     # "M1": "mlp_map_test/M1_S-4_R8_P2",
 
-    "M0": "mlp/M0_S-2_R1_P0",
-    "M1": "mlp/M1_S-2_R1_P0",
-    "M2": "mlp/M2_S-2_R1_P0",
-    "M3": "mlp/M3_S-1_B0_P0",
+    "M0": "mlp_map_test/M0_S-2_R1_P0",
+    "M1": "mlp_map_test/M1_S-2_R1_P0",
+    "M2": "mlp_map_test/M2_S-2_R1_P0",
+    "M3": "mlp_map_test/M3_S-1_B0_P0",
 
     "A0": "attn/A0_S-2_R1_P0",
     "A1": "attn/A1_S-1_R1_P0",
@@ -52,9 +52,10 @@ def parse_mlp_tag(mlp_tag):
         # try interpreting the mlp_tag as a filename
 
         mlp_type_to_file = {
-            # 'Mo': 'mlp_out',
+            'Mo': 'mlp_out',
             'A': 'attn_test',
-            'M': 'mlp_map_test',
+            'M': 'mlp_map_test', # transcoder
+            'T': 'mlp_map_test', # transcoder
             # 'Ra': 'res_pre_attn',
             # 'Rm': 'res_pre_mlp'
         }
