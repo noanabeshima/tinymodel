@@ -3,6 +3,7 @@ name = "tinymodel"
 version = "0.1.2.2-7"
 description = "A small TinyStories LM with SAEs and transcoders"
 authors = ["Noa Nabeshima <noanabeshima@gmail.com>"]
+license = "Apache-2.0"
 readme = "README.md"
 packages = [{include = "tinymodel"}]
 
